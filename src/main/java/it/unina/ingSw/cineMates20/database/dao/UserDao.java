@@ -4,9 +4,9 @@ import java.util.Collection;
 
 public interface UserDao<E, I> extends Dao<E, I> {
 
-    Collection<E> getAllFriends(E e);
+    Collection<E> getAllFriends(E user);
 
-    boolean addFriend(E e);
+    boolean addFriend(E user, E friendToAdd);
 
-    boolean removeFriend(E e);
+    boolean deleteFriend(E user, E friendToRemove);
 }
