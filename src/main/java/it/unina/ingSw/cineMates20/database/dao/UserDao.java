@@ -1,10 +1,10 @@
 package it.unina.ingSw.cineMates20.database.dao;
 
-import java.util.Collection;
+import java.util.Set;
 
 public interface UserDao<E, I> extends Dao<E, I> {
 
-    Collection<E> getAllFriends(E user);
+    Set<E> getAllFriends(E user);
 
     boolean addFriend(E user, E friendToAdd);
 

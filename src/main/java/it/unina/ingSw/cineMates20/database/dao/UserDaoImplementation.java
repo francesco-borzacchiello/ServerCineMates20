@@ -7,9 +7,10 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Timestamp;
-import java.util.Collection;
+import java.sql.ResultSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Repository("postgresUserTable")
 public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
@@ -18,34 +19,28 @@ public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
     JdbcTemplate jdbcTemplate = new JdbcTemplate();
 
     @Override
-    public Collection<UtenteEntity> getAllFriends(UtenteEntity utente) {
-        if (utente == null)
-            return null;
-
-        final String sql = "SELECT public.\"Amici\".\"FK_Utente\" " +
-                           "FROM public.\"Amici\" " +
-                           "WHERE public.\"Amici\".\"FK_Amico\" = ? " +
-                           "UNION " +
-                           "SELECT public.\"Amici\".\"FK_Amico\" " +
-                           "FROM public.\"Amici\" " +
-                           "WHERE public.\"Amici\".\"FK_Utente\" = ?";
+    public Set<UtenteEntity> getAllFriends(UtenteEntity utente) throws IllegalArgumentException{
+        if (utente == null) throw new IllegalArgumentException("Passare un utente non nullo");
 
         try {
-            return jdbcTemplate.query(sql, new String[] { utente.getUsername(), utente.getUsername() },
-                    //RowMapper<UtenteEntity> per mappare un amico ad un utente
-                    (resultSet, i) -> {
-                        String idAmico = resultSet.getString("FK_Utente");
-                        if(resultSet.wasNull())
-                            idAmico = resultSet.getString("FK_Amico");
-
-                        if(resultSet.wasNull())
-                            return null;
-
-                        return getById(idAmico);
-                    });
+            return new HashSet<>(jdbcTemplate.query(getSqlCommandForGetAllFriend(),
+                                                                new String[] { utente.getUsername(), utente.getUsername() },
+                                                                (resultSet, i) -> resulSetToUserEntity(resultSet)));
         } catch(DataAccessException e) {
             return null;
         }
+    }
+
+    private String getSqlCommandForGetAllFriend() {
+        return "Select * " +
+                "From public.\"Utente\" " +
+                "Where public.\"Utente\".\"username\" in (SELECT public.\"Amici\".\"FK_Utente\" as \"ID_Amico\" " +
+                                                            "FROM public.\"Amici\" " +
+                                                            "WHERE public.\"Amici\".\"FK_Amico\" = ? " +
+                                                            "UNION " +
+                                                            "SELECT public.\"Amici\".\"FK_Amico\" as \"ID_Amico\" " +
+                                                            "FROM public.\"Amici\" " +
+                                                            "WHERE public.\"Amici\".\"FK_Utente\" = ?);";
     }
 
     @Override
@@ -72,9 +67,8 @@ public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
         final String sql = "DELETE FROM public.\"Amici\" WHERE public.\"Amici\".\"FK_Utente\" = ? AND public.\"Amici\".\"FK_Amico\" = ?;";
 
         try {
-            int affectedRows = jdbcTemplate.update(sql, utente.getUsername(), amicoDaEliminare.getUsername());
             //Se non è stato rimosso nessun amico (nessun record modificato) restituisco "false"
-            return affectedRows != 0;
+            return jdbcTemplate.update(sql, utente.getUsername(), amicoDaEliminare.getUsername()) != 0;
         }catch(DataAccessException e){
             return false;
         }
@@ -88,17 +82,7 @@ public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
         final String sql = "SELECT * FROM public.\"Utente\" WHERE public.\"Utente\".username = ?;";
 
         try {
-            return jdbcTemplate.queryForObject(sql, new String[] { id }, (resultSet, i) -> {
-                String username = resultSet.getString("username");
-                String nome = resultSet.getString("nome");
-                String cognome = resultSet.getString("cognome");
-                String email = resultSet.getString("email");
-                String password = resultSet.getString("password");
-                Timestamp dataRegistrazione = resultSet.getTimestamp("dataRegistrazione");
-                TipologiaUtente tipoUtente = TipologiaUtente.valueOf(resultSet.getString("tipoUtente"));
-
-                return new UtenteEntity(username, nome, cognome, email, password, dataRegistrazione, tipoUtente);
-            });
+            return jdbcTemplate.queryForObject(sql, new String[] { id }, (resultSet, i) -> resulSetToUserEntity(resultSet));
         }catch(DataAccessException e){
             return null;
         }
@@ -106,23 +90,20 @@ public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
 
     @Override
     public List<UtenteEntity> getAll() {
-        final String sql = "SELECT * FROM public.\"Utente\"";
+        final String sqlSelectAll = "SELECT * FROM public.\"Utente\"";
 
         try{
-            return jdbcTemplate.query(sql, (resultSet, i) -> {
-                String username = resultSet.getString("username");
-                String nome = resultSet.getString("nome");
-                String cognome = resultSet.getString("cognome");
-                String email = resultSet.getString("email");
-                String password = resultSet.getString("password");
-                Timestamp dataRegistrazione = resultSet.getTimestamp("dataRegistrazione");
-                TipologiaUtente tipoUtente = TipologiaUtente.valueOf(resultSet.getString("tipoUtente"));
-
-                return new UtenteEntity(username, nome, cognome, email, password, dataRegistrazione, tipoUtente);
-            });
+            return jdbcTemplate.query(sqlSelectAll, (resultSet, i) -> resulSetToUserEntity(resultSet));
         }catch(DataAccessException e){
             return null;
         }
+    }
+
+    private UtenteEntity resulSetToUserEntity(ResultSet resultSet) throws  java.sql.SQLException{
+        return new UtenteEntity(resultSet.getString("username"), resultSet.getString("nome"),
+                                resultSet.getString("cognome"), resultSet.getString("email"),
+                                resultSet.getString("password"), resultSet.getTimestamp("dataRegistrazione"),
+                                TipologiaUtente.valueOf(resultSet.getString("tipoUtente")));
     }
 
     @Override
@@ -130,18 +111,20 @@ public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
         if (newUtente == null)
             return false;
 
-        final String sql = "INSERT INTO public.\"Utente\"(" +
-                "username, nome, cognome, email, password, \"dataRegistrazione\", \"tipoUtente\") " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?);";
-
         try {
-            int affectedRows = jdbcTemplate.update(sql, newUtente.getUsername(), newUtente.getNome(), newUtente.getCognome(), newUtente.getEmail(),
-                    newUtente.getPassword(), newUtente.getDataRegistrazione(), newUtente.getTipoUtente().toString());
             //Se non è stato inserito nessun nessun record restituisco "false"
-            return affectedRows != 0;
+            return jdbcTemplate.update(getSqlCommandForInsert(),
+                                        newUtente.getUsername(), newUtente.getNome(), newUtente.getCognome(), newUtente.getEmail(),
+                                        newUtente.getPassword(), newUtente.getDataRegistrazione(), newUtente.getTipoUtente().toString()) != 0;
         }catch(DataAccessException e){
             return false;
         }
+    }
+
+    private String getSqlCommandForInsert() {
+        return "INSERT INTO public.\"Utente\"(" +
+                "username, nome, cognome, email, password, \"dataRegistrazione\", \"tipoUtente\") " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?);";
     }
 
     @Override

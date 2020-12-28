@@ -10,8 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 public class ServerSpringUserController {
@@ -24,7 +24,8 @@ public class ServerSpringUserController {
     public void addUser(@RequestBody UtenteEntity utente) {
         boolean insert = dao.insert(utente);
         if (!insert)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "L'utente esiste già oppure uno o più dei dati inseriti corrispondono ad un utente già registrato.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "L'utente esiste già oppure uno o più dei dati inseriti corrispondono ad un utente già registrato.");
     }
 
     @RequestMapping(value="/ServerCineMates20/User/getById/{username}", method=RequestMethod.GET)
@@ -55,17 +56,19 @@ public class ServerSpringUserController {
     }
 
     @RequestMapping(value="/ServerCineMates20/User/getAllFriends/{username}", method=RequestMethod.GET)
-    public Collection<UtenteEntity> getAllFriends(@PathVariable("username") String username) {
+    public Set<UtenteEntity> getAllFriends(@PathVariable("username") String username) {
+        try {
+            return daoToUserDao().getAllFriends(getUserById(username));
+        }
+        catch(Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private UserDao<UtenteEntity,String> daoToUserDao() {
         if (!(dao instanceof UserDao))
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
-        UserDao<UtenteEntity,String> userDao = (UserDao<UtenteEntity,String>) dao;
-
-        Collection<UtenteEntity> amici = userDao.getAllFriends(getUserById(username));
-
-        if (amici == null || amici.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "L'utente non ha amici.");
-
-        return amici;
+        return (UserDao<UtenteEntity,String>) dao;
     }
 
     @RequestMapping(value="/ServerCineMates20/User/addFriend/{FK_Utente}/{FK_Amico}", method=RequestMethod.POST)
