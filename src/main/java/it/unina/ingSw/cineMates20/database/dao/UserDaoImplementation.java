@@ -25,7 +25,7 @@ public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
         try {
             return new HashSet<>(jdbcTemplate.query(getSqlCommandForGetAllFriend(),
                                                                 new String[] { utente.getUsername(), utente.getUsername() },
-                                                                (resultSet, i) -> resulSetToUserEntity(resultSet)));
+                                                                (resultSet, i) -> resultSetToUserEntity(resultSet)));
         } catch(DataAccessException e) {
             return null;
         }
@@ -75,14 +75,14 @@ public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
     }
 
     @Override
-    public UtenteEntity getById(String id) {
-        if (id == null)
+    public UtenteEntity getById(String email) {
+        if (email == null)
             return null;
 
-        final String sql = "SELECT * FROM public.\"Utente\" WHERE public.\"Utente\".username = ?;";
+        final String sql = "SELECT * FROM public.\"Utente\" WHERE public.\"Utente\".email = ?;";
 
         try {
-            return jdbcTemplate.queryForObject(sql, new String[] { id }, (resultSet, i) -> resulSetToUserEntity(resultSet));
+            return jdbcTemplate.queryForObject(sql, new String[] { email }, (resultSet, i) -> resultSetToUserEntity(resultSet));
         }catch(DataAccessException e){
             return null;
         }
@@ -93,16 +93,15 @@ public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
         final String sqlSelectAll = "SELECT * FROM public.\"Utente\"";
 
         try{
-            return jdbcTemplate.query(sqlSelectAll, (resultSet, i) -> resulSetToUserEntity(resultSet));
+            return jdbcTemplate.query(sqlSelectAll, (resultSet, i) -> resultSetToUserEntity(resultSet));
         }catch(DataAccessException e){
             return null;
         }
     }
 
-    private UtenteEntity resulSetToUserEntity(ResultSet resultSet) throws  java.sql.SQLException{
+    private UtenteEntity resultSetToUserEntity(ResultSet resultSet) throws  java.sql.SQLException{
         return new UtenteEntity(resultSet.getString("username"), resultSet.getString("nome"),
                                 resultSet.getString("cognome"), resultSet.getString("email"),
-                                resultSet.getString("password"), resultSet.getTimestamp("dataRegistrazione"),
                                 TipologiaUtente.valueOf(resultSet.getString("tipoUtente")));
     }
 
@@ -114,8 +113,8 @@ public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
         try {
             //Se non è stato inserito nessun nessun record restituisco "false"
             return jdbcTemplate.update(getSqlCommandForInsert(),
-                                        newUtente.getUsername(), newUtente.getNome(), newUtente.getCognome(), newUtente.getEmail(),
-                                        newUtente.getPassword(), newUtente.getDataRegistrazione(), newUtente.getTipoUtente().toString()) != 0;
+                                        newUtente.getEmail(), newUtente.getNome(), newUtente.getCognome(),
+                                        newUtente.getTipoUtente().toString(), newUtente.getUsername()) != 0;
         }catch(DataAccessException e){
             return false;
         }
@@ -123,8 +122,8 @@ public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
 
     private String getSqlCommandForInsert() {
         return "INSERT INTO public.\"Utente\"(" +
-                "username, nome, cognome, email, password, \"dataRegistrazione\", \"tipoUtente\") " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?);";
+                "email, nome, cognome, \"tipoUtente\", username)" +
+                "VALUES (?, ?, ?, ?, ?);";
     }
 
     @Override

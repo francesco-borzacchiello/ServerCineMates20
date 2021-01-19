@@ -16,9 +16,13 @@ import java.util.Set;
 @RestController
 public class ServerSpringUserController {
 
-    @Autowired
     @Qualifier("postgresUserTable")
-    private Dao<UtenteEntity, String> dao;
+    private final Dao<UtenteEntity, String> dao;
+
+    @Autowired
+    public ServerSpringUserController(Dao<UtenteEntity, String> dao) {
+        this.dao = dao;
+    }
 
     @RequestMapping(value="/ServerCineMates20/User/add", method=RequestMethod.POST)
     public void addUser(@RequestBody UtenteEntity utente) {
@@ -28,9 +32,9 @@ public class ServerSpringUserController {
                     "L'utente esiste già oppure uno o più dei dati inseriti corrispondono ad un utente già registrato.");
     }
 
-    @RequestMapping(value="/ServerCineMates20/User/getById/{username}", method=RequestMethod.GET)
-    public UtenteEntity getUserById(@PathVariable("username") String username) {
-        UtenteEntity utente = dao.getById(username);
+    @RequestMapping(value="/ServerCineMates20/User/getById/{email}", method=RequestMethod.GET)
+    public UtenteEntity getUserById(@PathVariable("email") String email) {
+        UtenteEntity utente = dao.getById(email);
 
         if (utente == null)
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "L'utente non esiste.");
