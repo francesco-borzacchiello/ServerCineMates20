@@ -1,12 +1,26 @@
 package it.unina.ingSw.cineMates20.database.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
 @Table(name = "ListaFilm", schema = "public", catalog = "CineMates20")
 public class ListaFilmEntity {
     private long id;
     private String nome;
+    private String fkPossessore;
+
+    public ListaFilmEntity(){}
+
+    public ListaFilmEntity(@JsonProperty("id") long id,
+                           @JsonProperty("nome") String nome,
+                           @JsonProperty("FK_Possessore") String fkPossessore) {
+        this.id = id;
+        this.nome = nome;
+        this.fkPossessore = fkPossessore;
+    }
 
     @Id
     @Column(name = "id")
@@ -28,6 +42,16 @@ public class ListaFilmEntity {
         this.nome = nome;
     }
 
+    @Basic
+    @Column(name = "FK_Possessore")
+    public String getFkPossessore() {
+        return fkPossessore;
+    }
+
+    public void setFkPossessore(String fkPossessore) {
+        this.fkPossessore = fkPossessore;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -36,9 +60,7 @@ public class ListaFilmEntity {
         ListaFilmEntity that = (ListaFilmEntity) o;
 
         if (id != that.id) return false;
-        if (nome != null ? !nome.equals(that.nome) : that.nome != null) return false;
-
-        return true;
+        return Objects.equals(nome, that.nome);
     }
 
     @Override

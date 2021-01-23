@@ -91,10 +91,7 @@ public class ServerSpringUserController {
         if(utente.getTipoUtente() == TipologiaUtente.amministratore || amico.getTipoUtente() == TipologiaUtente.amministratore)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Un amministratore non può avere amici");
 
-        UserDao<UtenteEntity,String> userDao = (UserDao<UtenteEntity,String>) dao;
-        boolean add = userDao.addFriend(utente, amico);
-
-        if (!add)
+        if (!daoToUserDao().addFriend(utente, amico))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, usernameAmico + " appartiene già alla lista amici di " + usernameUtente);
     }
 
@@ -114,10 +111,7 @@ public class ServerSpringUserController {
         if(utente.getTipoUtente() == TipologiaUtente.amministratore || amico.getTipoUtente() == TipologiaUtente.amministratore)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Un amministratore non possiede amici");
 
-        UserDao<UtenteEntity,String> userDao = (UserDao<UtenteEntity,String>) dao;
-        boolean delete = userDao.deleteFriend(utente, amico);
-
-        if (!delete)
+        if (!daoToUserDao().deleteFriend(utente, amico))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, usernameAmico + " non appartiene alla lista amici di " + usernameUtente);
     }
 }

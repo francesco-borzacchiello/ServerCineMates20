@@ -15,23 +15,27 @@ import java.util.Set;
 @Repository("postgresUserTable")
 public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
 
+    private final JdbcTemplate jdbcTemplate;
+
     @Autowired
-    JdbcTemplate jdbcTemplate = new JdbcTemplate();
+    public UserDaoImplementation(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     @Override
     public Set<UtenteEntity> getAllFriends(UtenteEntity utente) throws IllegalArgumentException{
         if (utente == null) throw new IllegalArgumentException("Passare un utente non nullo");
 
         try {
-            return new HashSet<>(jdbcTemplate.query(getSqlCommandForGetAllFriend(),
-                                                                new String[] { utente.getUsername(), utente.getUsername() },
-                                                                (resultSet, i) -> resultSetToUserEntity(resultSet)));
+            return new HashSet<>(jdbcTemplate.query(getSqlCommandForGetAllFriends(),
+                                                    new String[] { utente.getUsername(), utente.getUsername() },
+                                                    (resultSet, i) -> resultSetToUserEntity(resultSet)));
         } catch(DataAccessException e) {
             return null;
         }
     }
 
-    private String getSqlCommandForGetAllFriend() {
+    private String getSqlCommandForGetAllFriends() {
         return "Select * " +
                 "From public.\"Utente\" " +
                 "Where public.\"Utente\".\"username\" in (SELECT public.\"Amici\".\"FK_Utente\" as \"ID_Amico\" " +
