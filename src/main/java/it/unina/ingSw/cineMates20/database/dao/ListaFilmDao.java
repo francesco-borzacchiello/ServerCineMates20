@@ -6,15 +6,17 @@ import java.util.List;
 
 public interface ListaFilmDao<E, I> extends Dao<E, I>{
 
-    boolean addFilm(long idListaFilm, long idFilm);
+    boolean addFilm(E ListaFilm, long idFilm);
 
-    boolean removeFilm(long idListaFilm, long idFilm);
+    boolean removeFilm(E ListaFilm, long idFilm);
 
-    List<Long> getAllFilm(long idListaFilm);
+    boolean containsFilm(long idLista, long idFilm);
 
-    ListaFilmEntity getPreferitiByPossessore(String idPossessore);
+    List<Long> getAllFilm(E ListaFilm);
 
-    ListaFilmEntity getDaVedereByPossessore(String idPossessore);
+    E getPreferitiByPossessore(String idPossessore);
 
-    ListaFilmEntity getByPossessore(String idPossessore, String nomeLista);
+    E getDaVedereByPossessore(String idPossessore);
+
+    E getByPossessore(String idPossessore, String nomeLista);
 }

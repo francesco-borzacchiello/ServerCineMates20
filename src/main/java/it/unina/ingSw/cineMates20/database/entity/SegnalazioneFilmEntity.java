@@ -1,18 +1,36 @@
 package it.unina.ingSw.cineMates20.database.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.unina.ingSw.cineMates20.database.enums.TipoSegnalazione;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.Objects;
 
 @Entity
 @Table(name = "SegnalazioneFilm", schema = "public", catalog = "CineMates20")
 public class SegnalazioneFilmEntity {
     private long fkFilmSegnalato;
+    private String fkUtenteSegnalatore;
+    private String fkAmministratoreCheGestisce;
     private String messaggioSegnalazione;
     private Timestamp dataSegnalazione;
     private Timestamp dataGestione;
     private long id;
+    private boolean notificaVisibilePerUtente;
+
+    public SegnalazioneFilmEntity() {}
+
+    public SegnalazioneFilmEntity(@JsonProperty("FK_FilmSegnalato") long fkFilmSegnalato,
+                                  @JsonProperty("FK_UtenteSegnalatore") String fkUtenteSegnalatore,
+                                  @JsonProperty("MessaggioSegnalazione") String messaggioSegnalazione) {
+        this.fkFilmSegnalato = fkFilmSegnalato;
+        this.fkUtenteSegnalatore = fkUtenteSegnalatore;
+        this.messaggioSegnalazione = messaggioSegnalazione;
+        this.dataSegnalazione = Timestamp.from(Instant.now());
+        esitoSegnalazione = TipoSegnalazione.Pendente;
+    }
 
     @Enumerated(EnumType.STRING)
     private TipoSegnalazione esitoSegnalazione;
@@ -25,6 +43,26 @@ public class SegnalazioneFilmEntity {
 
     public void setFkFilmSegnalato(long fkFilmSegnalato) {
         this.fkFilmSegnalato = fkFilmSegnalato;
+    }
+
+    @Basic
+    @Column(name = "FK_UtenteSegnalatore")
+    public String getFkUtenteSegnalatore() {
+        return fkUtenteSegnalatore;
+    }
+
+    public void setFkUtenteSegnalatore(String fkUtenteSegnalatore) {
+        this.fkUtenteSegnalatore = fkUtenteSegnalatore;
+    }
+
+    @Basic
+    @Column(name = "FK_AmministratoreCheGestisce")
+    public String getFkAmministratoreCheGestisce() {
+        return fkAmministratoreCheGestisce;
+    }
+
+    public void setFkAmministratoreCheGestisce(String fkAmministratoreCheGestisce) {
+        this.fkAmministratoreCheGestisce = fkAmministratoreCheGestisce;
     }
 
     @Basic
@@ -77,35 +115,35 @@ public class SegnalazioneFilmEntity {
         this.id = id;
     }
 
+    @Basic
+    @Column(name = "notifica_visibile_per_utente")
+    public boolean isNotificaVisibilePerUtente() {
+        return notificaVisibilePerUtente;
+    }
+
+    public void setNotificaVisibilePerUtente(boolean notificaVisibilePerUtente) {
+        this.notificaVisibilePerUtente = notificaVisibilePerUtente;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         SegnalazioneFilmEntity that = (SegnalazioneFilmEntity) o;
-
-        if (fkFilmSegnalato != that.fkFilmSegnalato) return false;
-        if (id != that.id) return false;
-        if (esitoSegnalazione != null ? !esitoSegnalazione.equals(that.esitoSegnalazione) : that.esitoSegnalazione != null)
-            return false;
-        if (messaggioSegnalazione != null ? !messaggioSegnalazione.equals(that.messaggioSegnalazione) : that.messaggioSegnalazione != null)
-            return false;
-        if (dataSegnalazione != null ? !dataSegnalazione.equals(that.dataSegnalazione) : that.dataSegnalazione != null)
-            return false;
-        if (dataGestione != null ? !dataGestione.equals(that.dataGestione) : that.dataGestione != null) return false;
-
-        return true;
+        return fkFilmSegnalato == that.fkFilmSegnalato &&
+                id == that.id &&
+                notificaVisibilePerUtente == that.notificaVisibilePerUtente &&
+                fkUtenteSegnalatore.equals(that.fkUtenteSegnalatore) &&
+                Objects.equals(fkAmministratoreCheGestisce, that.fkAmministratoreCheGestisce) &&
+                messaggioSegnalazione.equals(that.messaggioSegnalazione) &&
+                dataSegnalazione.equals(that.dataSegnalazione) &&
+                Objects.equals(dataGestione, that.dataGestione) &&
+                esitoSegnalazione == that.esitoSegnalazione;
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (fkFilmSegnalato ^ (fkFilmSegnalato >>> 32));
-        result = 31 * result + (esitoSegnalazione != null ? esitoSegnalazione.hashCode() : 0);
-        result = 31 * result + (messaggioSegnalazione != null ? messaggioSegnalazione.hashCode() : 0);
-        result = 31 * result + (dataSegnalazione != null ? dataSegnalazione.hashCode() : 0);
-        result = 31 * result + (dataGestione != null ? dataGestione.hashCode() : 0);
-        result = 31 * result + (int) (id ^ (id >>> 32));
-        return result;
+        return Objects.hash(fkFilmSegnalato, fkUtenteSegnalatore, fkAmministratoreCheGestisce, messaggioSegnalazione, dataSegnalazione, dataGestione, id, notificaVisibilePerUtente, esitoSegnalazione);
     }
 }
 

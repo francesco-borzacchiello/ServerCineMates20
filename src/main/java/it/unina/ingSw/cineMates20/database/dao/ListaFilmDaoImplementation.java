@@ -34,7 +34,7 @@ public class ListaFilmDaoImplementation implements ListaFilmDao<ListaFilmEntity,
         if (idPossessore == null || nomeLista == null)
             return null;
 
-        final String sql = "SELECT * FROM \"ListaFilm\" WHERE \"ListaFilm\".\"FK_Possessore\" = ? AND \"ListaFilm\".\"nome\" = ?;";
+        final String sql = "SELECT * FROM \"ListaFilm\" WHERE \"Email_Possessore\" = ? AND \"nome\" = ?;";
 
         try {
             return jdbcTemplate.queryForObject(sql, new String[] { idPossessore, nomeLista },
@@ -60,14 +60,16 @@ public class ListaFilmDaoImplementation implements ListaFilmDao<ListaFilmEntity,
     private ListaFilmEntity resultSetToListaFilmEntity(ResultSet resultSet) throws  java.sql.SQLException{
         return new ListaFilmEntity(resultSet.getLong("id"),
                                    resultSet.getString("nome"),
-                                   resultSet.getString("FK_Possessore"));
+                                   resultSet.getString("Email_Possessore"));
     }
 
     @Override
-    public boolean addFilm(long idListaFilm, long idFilm) {
+    public boolean addFilm(ListaFilmEntity listaFilm, long idFilm) {
+        if(listaFilm == null) return false;
+
         try {
             return jdbcTemplate.update(getSqlCommandForAddFilm(),
-                    idListaFilm, idFilm) != 0;
+                    listaFilm.getId(), idFilm) != 0;
         }catch(DataAccessException e){
             System.out.println(e.getMessage());
             return false;
@@ -81,9 +83,23 @@ public class ListaFilmDaoImplementation implements ListaFilmDao<ListaFilmEntity,
     }
 
     @Override
-    public boolean removeFilm(long idListaFilm, long idFilm) {
+    public boolean removeFilm(ListaFilmEntity listaFilm, long idFilm) {
+        if(listaFilm == null) return false;
+
         try {
-            return jdbcTemplate.update(getSqlCommandForRemoveFilm(), idListaFilm, idFilm) != 0;
+            return jdbcTemplate.update(getSqlCommandForRemoveFilm(), listaFilm.getId(), idFilm) != 0;
+        }catch(DataAccessException e){
+            return false;
+        }
+    }
+
+    @Override
+    public boolean containsFilm(long idLista, long idFilm) {
+        final String sql = "SELECT COUNT(*) FROM \"Lista_Contiene_Film\" WHERE \"FK_Lista_Contenitrice\" = ? AND \"FK_Film\" = ?;";
+
+        try {
+            Integer resultQuery = jdbcTemplate.queryForObject(sql, new Object[] { idLista, idFilm }, Integer.class);
+            return resultQuery != null && resultQuery >= 1;
         }catch(DataAccessException e){
             return false;
         }
@@ -95,9 +111,11 @@ public class ListaFilmDaoImplementation implements ListaFilmDao<ListaFilmEntity,
     }
 
     @Override
-    public List<Long> getAllFilm(long idListaFilm) {
+    public List<Long> getAllFilm(ListaFilmEntity listaFilm) {
+        if(listaFilm == null) return null;
+
         try {
-            return jdbcTemplate.query(getSqlCommandForGetAllFilm(), new Long[] { idListaFilm },
+            return jdbcTemplate.query(getSqlCommandForGetAllFilm(), new Long[] { listaFilm.getId() },
                     (rs, rowNum) -> rs.getLong("FK_Film"));
         }catch(DataAccessException e){
             return null;
@@ -125,9 +143,9 @@ public class ListaFilmDaoImplementation implements ListaFilmDao<ListaFilmEntity,
             return false;
 
         try {
-            //Se non è stato inserito nessun nessun record restituisco "false"
+            //Se non è stato inserito nessun record restituisco "false"
             return jdbcTemplate.update(getSqlCommandForInsert(),
-                    newListaFilm.getNome(), newListaFilm.getFkPossessore()) != 0;
+                    newListaFilm.getNome(), newListaFilm.getEmailPossessore()) != 0;
         }catch(DataAccessException e){
             return false;
         }
@@ -135,7 +153,7 @@ public class ListaFilmDaoImplementation implements ListaFilmDao<ListaFilmEntity,
 
     private String getSqlCommandForInsert() {
         return "INSERT INTO public.\"ListaFilm\"(" +
-                "id, nome, \"FK_Possessore\")" +
+                "id, nome, \"Email_Possessore\") " +
                 "VALUES (nextval('pk_lista_film'), ?, ?);";
     }
 

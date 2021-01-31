@@ -10,16 +10,16 @@ import java.util.Objects;
 public class ListaFilmEntity {
     private long id;
     private String nome;
-    private String fkPossessore;
+    private String emailPossessore;
 
     public ListaFilmEntity(){}
 
     public ListaFilmEntity(@JsonProperty("id") long id,
                            @JsonProperty("nome") String nome,
-                           @JsonProperty("FK_Possessore") String fkPossessore) {
+                           @JsonProperty("Email_Possessore") String emailPossessore) {
         this.id = id;
         this.nome = nome;
-        this.fkPossessore = fkPossessore;
+        this.emailPossessore = emailPossessore;
     }
 
     @Id
@@ -43,13 +43,13 @@ public class ListaFilmEntity {
     }
 
     @Basic
-    @Column(name = "FK_Possessore")
-    public String getFkPossessore() {
-        return fkPossessore;
+    @Column(name = "Email_Possessore")
+    public String getEmailPossessore() {
+        return emailPossessore;
     }
 
-    public void setFkPossessore(String fkPossessore) {
-        this.fkPossessore = fkPossessore;
+    public void setEmailPossessore(String emailPossessore) {
+        this.emailPossessore = emailPossessore;
     }
 
     @Override

@@ -29,8 +29,8 @@ public class ServerSpringListaFilmController {
                     "La lista esiste già oppure il possessore non esiste.");
     }
 
-    @RequestMapping(value="/ServerCineMates20/ListaFilm/getPreferitiByPossessore/{FK_Possessore}", method = RequestMethod.GET)
-    public ListaFilmEntity getListaFilmPreferitiByPossessore(@PathVariable("FK_Possessore") String idPossessore) {
+    @RequestMapping(value="/ServerCineMates20/ListaFilm/getPreferitiByPossessore/{Email_Possessore}", method = RequestMethod.GET)
+    public ListaFilmEntity getListaFilmPreferitiByPossessore(@PathVariable("Email_Possessore") String idPossessore) {
         ListaFilmEntity listaFilm = daoToListaFilmDao().getPreferitiByPossessore(idPossessore);
 
         if (listaFilm == null)
@@ -39,8 +39,8 @@ public class ServerSpringListaFilmController {
         return listaFilm;
     }
 
-    @RequestMapping(value="/ServerCineMates20/ListaFilm/getDaVedereByPossessore/{FK_Possessore}", method = RequestMethod.GET)
-    public ListaFilmEntity getListaFilmDaVedereByPossessore(@PathVariable("FK_Possessore") String idPossessore) {
+    @RequestMapping(value="/ServerCineMates20/ListaFilm/getDaVedereByPossessore/{Email_Possessore}", method = RequestMethod.GET)
+    public ListaFilmEntity getListaFilmDaVedereByPossessore(@PathVariable("Email_Possessore") String idPossessore) {
         ListaFilmEntity listaFilm = daoToListaFilmDao().getDaVedereByPossessore(idPossessore);
 
         if (listaFilm == null)
@@ -49,25 +49,26 @@ public class ServerSpringListaFilmController {
         return listaFilm;
     }
 
-    @RequestMapping(value="/ServerCineMates20/ListaFilm/addFilmToListaFilm/{id}/{FK_Film}", method = RequestMethod.POST)
-    public void addFilmByIdListaFilm(@PathVariable("id") long idListaFilm, @PathVariable("FK_Film") long idFilm) {
-        boolean add = daoToListaFilmDao().addFilm(idListaFilm, idFilm);
-
-        if (!add)
+    @RequestMapping(value="/ServerCineMates20/ListaFilm/addFilmToListaFilm/{FK_Film}", method = RequestMethod.POST)
+    public void addFilmByIdListaFilm(@RequestBody ListaFilmEntity listaFilm, @PathVariable("FK_Film") long idFilm) {
+        if (!daoToListaFilmDao().addFilm(listaFilm, idFilm))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Il film o la lista non esiste.");
     }
 
-    @RequestMapping(value="/ServerCineMates20/ListaFilm/removeFilmFromListaFilm/{id}/{FK_Film}", method = RequestMethod.POST)
-    public void removeFilmByIdListaFilm(@PathVariable("id") long idListaFilm, @PathVariable("FK_Film") long idFilm) {
-        boolean remove = daoToListaFilmDao().removeFilm(idListaFilm, idFilm);
-
-        if (!remove)
+    @RequestMapping(value="/ServerCineMates20/ListaFilm/removeFilmFromListaFilm/{FK_Film}", method = RequestMethod.POST)
+    public void removeFilmByIdListaFilm(@RequestBody ListaFilmEntity listaFilm, @PathVariable("FK_Film") long idFilm) {
+        if (!daoToListaFilmDao().removeFilm(listaFilm, idFilm))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Il film o la lista non esiste oppure la lista è vuota.");
     }
 
-    @RequestMapping(value="/ServerCineMates20/ListaFilm/getAll/{id}", method = RequestMethod.GET)
-    public List<Long> getAllFilmByIdListaFilm(@PathVariable("id") long idListaFilm) {
-        List<Long> list = daoToListaFilmDao().getAllFilm(idListaFilm);
+    @RequestMapping(value="/ServerCineMates20/ListaFilm/containsFilm/{id}/{FK_Film}", method = RequestMethod.GET)
+    public boolean containsFilm(@PathVariable("id") long idLista, @PathVariable("FK_Film") long idFilm) {
+        return daoToListaFilmDao().containsFilm(idLista, idFilm);
+    }
+
+    @RequestMapping(value="/ServerCineMates20/ListaFilm/getAll", method = RequestMethod.POST)
+    public List<Long> getAllFilmByIdListaFilm(@RequestBody ListaFilmEntity listaFilm) {
+        List<Long> list = daoToListaFilmDao().getAllFilm(listaFilm);
 
         if (list == null)
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La lista non esiste.");

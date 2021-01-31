@@ -1,21 +1,54 @@
 package it.unina.ingSw.cineMates20.database.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.unina.ingSw.cineMates20.database.enums.TipoSegnalazione;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.Objects;
 
 @Entity
 @Table(name = "SegnalazioneUtente", schema = "public", catalog = "CineMates20")
 public class SegnalazioneUtenteEntity {
     private String fkUtenteSegnalato;
+    private String fkUtenteSegnalatore;
+    private String fkAmministratoreCheGestisce;
     private String messaggioSegnalazione;
     private Timestamp dataSegnalazione;
     private Timestamp dataGestione;
     private long id;
-    
+    private boolean notificaVisibilePerUtente;
+
     @Enumerated(EnumType.STRING)
     private TipoSegnalazione esitoSegnalazione;
+
+    public SegnalazioneUtenteEntity() {}
+
+
+    public SegnalazioneUtenteEntity(@JsonProperty("FK_UtenteSegnalato") String fkUtenteSegnalato,
+                                    @JsonProperty("FK_UtenteSegnalatore") String fkUtenteSegnalatore,
+                                    @JsonProperty("MessaggioSegnalazione") String messaggioSegnalazione) {
+        this.fkUtenteSegnalato = fkUtenteSegnalato;
+        this.fkUtenteSegnalatore = fkUtenteSegnalatore;
+        this.messaggioSegnalazione = messaggioSegnalazione;
+        this.dataSegnalazione = Timestamp.from(Instant.now());
+        esitoSegnalazione = TipoSegnalazione.Pendente;
+    }
+
+    /*
+    {
+        "FK_UtenteSegnalato":"hwnd875o@yasellerbot.xyz",
+        "FK_UtenteSegnalatore":"carmineegr@gmail.com",
+        "FK_AmministratoreCheGestisce":null,
+        "EsitoSegnalazione":"pendente",
+        "MessaggioSegnalazione":"Si finge qualcun'altro",
+        "DataSegnalazione":"2021-01-31T11:39:43.511Z",
+        "DataGestione":null,
+        "Id":null,
+        "notifica_visibile_per_utente": "false"
+    }
+    */
 
     @Basic
     @Column(name = "FK_UtenteSegnalato")
@@ -23,8 +56,29 @@ public class SegnalazioneUtenteEntity {
         return fkUtenteSegnalato;
     }
 
+
     public void setFkUtenteSegnalato(String fkUtenteSegnalato) {
         this.fkUtenteSegnalato = fkUtenteSegnalato;
+    }
+
+    @Basic
+    @Column(name = "FK_UtenteSegnalatore")
+    public String getFkUtenteSegnalatore() {
+        return fkUtenteSegnalatore;
+    }
+
+    public void setFkUtenteSegnalatore(String fkUtenteSegnalatore) {
+        this.fkUtenteSegnalatore = fkUtenteSegnalatore;
+    }
+
+    @Basic
+    @Column(name = "FK_AmministratoreCheGestisce")
+    public String getFkAmministratoreCheGestisce() {
+        return fkAmministratoreCheGestisce;
+    }
+
+    public void setFkAmministratoreCheGestisce(String fkAmministratoreCheGestisce) {
+        this.fkAmministratoreCheGestisce = fkAmministratoreCheGestisce;
     }
 
     @Basic
@@ -77,6 +131,17 @@ public class SegnalazioneUtenteEntity {
         this.id = id;
     }
 
+    @Basic
+    @Column(name = "notifica_visibile_per_utente")
+    public boolean isNotificaVisibilePerUtente() {
+        return notificaVisibilePerUtente;
+    }
+
+    public void setNotificaVisibilePerUtente(boolean notificaVisibilePerUtente) {
+        this.notificaVisibilePerUtente = notificaVisibilePerUtente;
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -85,27 +150,29 @@ public class SegnalazioneUtenteEntity {
         SegnalazioneUtenteEntity that = (SegnalazioneUtenteEntity) o;
 
         if (id != that.id) return false;
-        if (fkUtenteSegnalato != null ? !fkUtenteSegnalato.equals(that.fkUtenteSegnalato) : that.fkUtenteSegnalato != null)
+        if (!Objects.equals(fkUtenteSegnalato, that.fkUtenteSegnalato))
             return false;
-        if (esitoSegnalazione != null ? !esitoSegnalazione.equals(that.esitoSegnalazione) : that.esitoSegnalazione != null)
+        if (!Objects.equals(fkUtenteSegnalatore, that.fkUtenteSegnalatore))
             return false;
-        if (messaggioSegnalazione != null ? !messaggioSegnalazione.equals(that.messaggioSegnalazione) : that.messaggioSegnalazione != null)
+        if (!Objects.equals(fkAmministratoreCheGestisce, that.fkAmministratoreCheGestisce))
             return false;
-        if (dataSegnalazione != null ? !dataSegnalazione.equals(that.dataSegnalazione) : that.dataSegnalazione != null)
+        if (!Objects.equals(esitoSegnalazione, that.esitoSegnalazione))
             return false;
-        if (dataGestione != null ? !dataGestione.equals(that.dataGestione) : that.dataGestione != null) return false;
-
-        return true;
+        if (!Objects.equals(messaggioSegnalazione, that.messaggioSegnalazione))
+            return false;
+        if (!Objects.equals(dataSegnalazione, that.dataSegnalazione))
+            return false;
+        if (notificaVisibilePerUtente != that.notificaVisibilePerUtente)
+            return false;
+        return Objects.equals(dataGestione, that.dataGestione);
     }
 
     @Override
     public int hashCode() {
-        int result = fkUtenteSegnalato != null ? fkUtenteSegnalato.hashCode() : 0;
-        result = 31 * result + (esitoSegnalazione != null ? esitoSegnalazione.hashCode() : 0);
-        result = 31 * result + (messaggioSegnalazione != null ? messaggioSegnalazione.hashCode() : 0);
-        result = 31 * result + (dataSegnalazione != null ? dataSegnalazione.hashCode() : 0);
-        result = 31 * result + (dataGestione != null ? dataGestione.hashCode() : 0);
-        result = 31 * result + (int) (id ^ (id >>> 32));
-        return result;
+        return Objects.hash(fkUtenteSegnalato, fkUtenteSegnalatore, fkAmministratoreCheGestisce,
+                            messaggioSegnalazione, dataSegnalazione, dataGestione, id,
+                            notificaVisibilePerUtente, esitoSegnalazione);
     }
 }
+
+
