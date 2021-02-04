@@ -7,6 +7,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.ResultSet;
 import java.util.List;
 
 @Repository("postgresSegnalazioneUtenteTable")
@@ -26,16 +27,40 @@ public class SegnalazioneUtenteDaoImplementation implements SegnalazioneUtenteDa
 
     @Override
     public List<SegnalazioneUtenteEntity> getAll() {
-        return null;
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<SegnalazioneUtenteEntity> getAllUsersReports(String userEmail) {
+        try{
+            return jdbcTemplate.query(getSqlCommandForAllUsersReports(),
+                                      (resultSet, i) -> resultSetToSegnalazioneUtenteEntity(resultSet), userEmail);
+        }catch(DataAccessException e){
+            return null;
+        }
+    }
+
+    private SegnalazioneUtenteEntity resultSetToSegnalazioneUtenteEntity(ResultSet resultSet) throws java.sql.SQLException {
+        return new SegnalazioneUtenteEntity(resultSet.getString("FK_UtenteSegnalato"),
+                null, null,
+                TipoSegnalazione.valueOf(resultSet.getString("EsitoSegnalazione")));
+    }
+
+    private String getSqlCommandForAllUsersReports() {
+        return  "SELECT DISTINCT ON (\"FK_UtenteSegnalato\") \"FK_UtenteSegnalato\", \"EsitoSegnalazione\" " +
+                "FROM \"SegnalazioneUtente\" " +
+                "WHERE \"SegnalazioneUtente\".\"notifica_visibile_per_utente\" = 'true' " +
+                " AND \"SegnalazioneUtente\".\"FK_UtenteSegnalatore\" = ?;";
     }
 
     @Override
     public boolean insert(SegnalazioneUtenteEntity newSegnalazioneUtente) {
         if (newSegnalazioneUtente == null ||
-           newSegnalazioneUtente.getFkAmministratoreCheGestisce() != null ||
-           newSegnalazioneUtente.getDataGestione() != null ||
-           newSegnalazioneUtente.getEsitoSegnalazione() != TipoSegnalazione.Pendente)
+            newSegnalazioneUtente.getFkAmministratoreCheGestisce() != null ||
+            newSegnalazioneUtente.getDataGestione() != null)
             return false;
+
+        newSegnalazioneUtente.setEsitoSegnalazione(TipoSegnalazione.Pendente);
 
         try {
             //Se non è stato inserito nessun record restituisco "false"
@@ -61,11 +86,39 @@ public class SegnalazioneUtenteDaoImplementation implements SegnalazioneUtenteDa
 
     @Override
     public boolean update(SegnalazioneUtenteEntity segnalazioneUtenteEntity) {
-        return false;
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean updateUserDeleteNotification(SegnalazioneUtenteEntity segnalazioneUtenteEntity) {
+        if (segnalazioneUtenteEntity == null)
+            return false;
+
+        try {
+            //Se non è stato modificato nessun record restituisco "false"
+            return jdbcTemplate.update(getSqlCommandForUserNotificationDelete(),
+                                 segnalazioneUtenteEntity.getFkUtenteSegnalato(),
+                                       segnalazioneUtenteEntity.getFkUtenteSegnalatore(), true) != 0;
+        }catch(DataAccessException e){
+            return false;
+        }
+    }
+
+    private String getSqlCommandForUserNotificationDelete() {
+        return  "UPDATE \"SegnalazioneUtente\" " +
+                "SET \"notifica_visibile_per_utente\"= 'false' " +
+                "WHERE \"FK_UtenteSegnalato\" = ? " +
+                     " AND \"FK_UtenteSegnalatore\" = ? " +
+                     " AND notifica_visibile_per_utente = ?;";
+    }
+
+    @Override
+    public boolean updateAdministratorHandledNotification(SegnalazioneUtenteEntity segnalazioneUtenteEntity) {
+        throw new UnsupportedOperationException(); //TODO: da completare durante applicativo desktop
     }
 
     @Override
     public boolean delete(SegnalazioneUtenteEntity segnalazioneUtenteEntity) {
-        return false;
+        throw new UnsupportedOperationException();
     }
 }

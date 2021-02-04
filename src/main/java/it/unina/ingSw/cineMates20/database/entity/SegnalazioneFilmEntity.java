@@ -20,20 +20,21 @@ public class SegnalazioneFilmEntity {
     private long id;
     private boolean notificaVisibilePerUtente;
 
+    @Enumerated(EnumType.STRING)
+    private TipoSegnalazione esitoSegnalazione;
+
     public SegnalazioneFilmEntity() {}
 
     public SegnalazioneFilmEntity(@JsonProperty("FK_FilmSegnalato") long fkFilmSegnalato,
                                   @JsonProperty("FK_UtenteSegnalatore") String fkUtenteSegnalatore,
-                                  @JsonProperty("MessaggioSegnalazione") String messaggioSegnalazione) {
+                                  @JsonProperty("MessaggioSegnalazione") String messaggioSegnalazione,
+                                  @JsonProperty("EsitoSegnalazione") TipoSegnalazione esitoSegnalazione) {
         this.fkFilmSegnalato = fkFilmSegnalato;
         this.fkUtenteSegnalatore = fkUtenteSegnalatore;
         this.messaggioSegnalazione = messaggioSegnalazione;
         this.dataSegnalazione = Timestamp.from(Instant.now());
-        esitoSegnalazione = TipoSegnalazione.Pendente;
+        this.esitoSegnalazione = esitoSegnalazione;
     }
-
-    @Enumerated(EnumType.STRING)
-    private TipoSegnalazione esitoSegnalazione;
 
     @Basic
     @Column(name = "FK_FilmSegnalato")

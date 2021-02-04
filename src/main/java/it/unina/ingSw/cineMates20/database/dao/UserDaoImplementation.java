@@ -189,7 +189,7 @@ public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
 
     @Override
     public List<UtenteEntity> getAll() {
-        final String sqlSelectAll = "SELECT * FROM public.\"Utente\"";
+        final String sqlSelectAll = "SELECT * FROM public.\"Utente\" WHERE \"tipoUtente\" = 'utente';";
 
         try{
             return jdbcTemplate.query(sqlSelectAll, (resultSet, i) -> resultSetToUserEntity(resultSet));

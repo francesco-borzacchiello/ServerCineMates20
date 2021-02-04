@@ -25,30 +25,16 @@ public class SegnalazioneUtenteEntity {
 
     public SegnalazioneUtenteEntity() {}
 
-
     public SegnalazioneUtenteEntity(@JsonProperty("FK_UtenteSegnalato") String fkUtenteSegnalato,
                                     @JsonProperty("FK_UtenteSegnalatore") String fkUtenteSegnalatore,
-                                    @JsonProperty("MessaggioSegnalazione") String messaggioSegnalazione) {
+                                    @JsonProperty("MessaggioSegnalazione") String messaggioSegnalazione,
+                                    @JsonProperty("EsitoSegnalazione") TipoSegnalazione esitoSegnalazione) {
         this.fkUtenteSegnalato = fkUtenteSegnalato;
         this.fkUtenteSegnalatore = fkUtenteSegnalatore;
         this.messaggioSegnalazione = messaggioSegnalazione;
         this.dataSegnalazione = Timestamp.from(Instant.now());
-        esitoSegnalazione = TipoSegnalazione.Pendente;
+        this.esitoSegnalazione = esitoSegnalazione;
     }
-
-    /*
-    {
-        "FK_UtenteSegnalato":"hwnd875o@yasellerbot.xyz",
-        "FK_UtenteSegnalatore":"carmineegr@gmail.com",
-        "FK_AmministratoreCheGestisce":null,
-        "EsitoSegnalazione":"pendente",
-        "MessaggioSegnalazione":"Si finge qualcun'altro",
-        "DataSegnalazione":"2021-01-31T11:39:43.511Z",
-        "DataGestione":null,
-        "Id":null,
-        "notifica_visibile_per_utente": "false"
-    }
-    */
 
     @Basic
     @Column(name = "FK_UtenteSegnalato")
@@ -79,16 +65,6 @@ public class SegnalazioneUtenteEntity {
 
     public void setFkAmministratoreCheGestisce(String fkAmministratoreCheGestisce) {
         this.fkAmministratoreCheGestisce = fkAmministratoreCheGestisce;
-    }
-
-    @Basic
-    @Column(name = "EsitoSegnalazione")
-    public TipoSegnalazione getEsitoSegnalazione() {
-        return esitoSegnalazione;
-    }
-
-    public void setEsitoSegnalazione(TipoSegnalazione esitoSegnalazione) {
-        this.esitoSegnalazione = esitoSegnalazione;
     }
 
     @Basic
@@ -139,6 +115,16 @@ public class SegnalazioneUtenteEntity {
 
     public void setNotificaVisibilePerUtente(boolean notificaVisibilePerUtente) {
         this.notificaVisibilePerUtente = notificaVisibilePerUtente;
+    }
+
+    @Basic
+    @Column(name = "EsitoSegnalazione")
+    public TipoSegnalazione getEsitoSegnalazione() {
+        return esitoSegnalazione;
+    }
+
+    public void setEsitoSegnalazione(TipoSegnalazione esitoSegnalazione) {
+        this.esitoSegnalazione = esitoSegnalazione;
     }
 
 
