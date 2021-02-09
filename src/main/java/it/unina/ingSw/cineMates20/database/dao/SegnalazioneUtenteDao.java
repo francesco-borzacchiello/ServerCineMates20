@@ -5,6 +5,10 @@ import java.util.List;
 public interface SegnalazioneUtenteDao<E, I> extends Dao<E,I>{
     List<E> getAllUsersReports(String userEmail);
 
+    List<E> getAllReportedUsers();
+
+    List<E> getAllManagedReportedUsers();
+
     boolean updateUserDeleteNotification(E segnalazioneUtenteEntity);
 
     boolean updateAdministratorHandledNotification(E segnalazioneUtenteEntity);

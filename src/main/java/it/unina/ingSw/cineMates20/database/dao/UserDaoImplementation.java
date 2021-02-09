@@ -38,14 +38,15 @@ public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
     private String getSqlCommandForGetUsersByQuery() {
         return  "SELECT * " +
                 "FROM \"Utente\" " +
-                "WHERE LOWER(nome) LIKE '%' || TRIM(LOWER(?)) || '%' " +
+                "WHERE \"Utente\".\"tipoUtente\" = 'utente' AND " +
+                "      (LOWER(nome) LIKE '%' || TRIM(LOWER(?)) || '%' " +
                 "      OR LOWER(cognome) LIKE '%' || TRIM(LOWER(?)) || '%' " +
                 "      OR username LIKE '%' || TRIM(?) || '%' " +
                 "      OR LOWER(email) LIKE '%' || TRIM (LOWER(?)) || '%' " +
                 "      OR LOWER(nome || ' ' || cognome) " +
                 "         LIKE '%' || TRIM(LOWER(REPLACE(REPLACE(REPLACE(?, ' ', '*^'), '^*', ''), '*^', ' '))) || '%' " +
                 "      OR LOWER(cognome || ' ' || nome) " +
-                "         LIKE '%' || TRIM(LOWER(REPLACE(REPLACE(REPLACE(?, ' ', '*^'), '^*', ''), '*^', ' '))) || '%';";
+                "         LIKE '%' || TRIM(LOWER(REPLACE(REPLACE(REPLACE(?, ' ', '*^'), '^*', ''), '*^', ' '))) || '%');";
     }
 
     @Override

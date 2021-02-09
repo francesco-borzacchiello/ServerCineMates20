@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 public class ServerSpringAmministratoriController {
+
     @Qualifier("postgresCredenzialiAdminTable")
     private final Dao<CredenzialiAmministratoriEntity, Integer> dao;
 
@@ -24,7 +25,7 @@ public class ServerSpringAmministratoriController {
         System.out.println("EmailHash: " + emailHash);
         if(emailHash == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Argomento non valido, c'è bisogno del hash di una mail");
+                    "Argomento non valido, è necessario un hash di un'email valido.");
         String passwordHash = daoToAdministratorDao().getHashPassword(emailHash);
         if(passwordHash == null)
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);

@@ -34,7 +34,7 @@ public class SegnalazioneFilmDaoImplementation implements SegnalazioneFilmDao<Se
     public List<SegnalazioneFilmEntity> getAllMovieReports(String userEmail) {
         try{
             return jdbcTemplate.query(getSqlCommandForAllMovieReports(),
-                                      (resultSet, i) -> resultSetToSegnalazioneFilmEntity(resultSet), userEmail);
+                                      (resultSet, i) -> resultSetForUsersToSegnalazioneFilmEntity(resultSet), userEmail);
         }catch(DataAccessException e){
             return null;
         }
@@ -44,10 +44,51 @@ public class SegnalazioneFilmDaoImplementation implements SegnalazioneFilmDao<Se
         return  "SELECT DISTINCT ON (\"FK_FilmSegnalato\") \"FK_FilmSegnalato\", \"EsitoSegnalazione\" " +
                 "FROM \"SegnalazioneFilm\" " +
                 "WHERE \"SegnalazioneFilm\".\"notifica_visibile_per_utente\" = 'true' " +
-                       " AND \"SegnalazioneFilm\".\"FK_UtenteSegnalatore\" = ?;";
+                " AND \"SegnalazioneFilm\".\"FK_UtenteSegnalatore\" = ?;";
     }
 
-    private SegnalazioneFilmEntity resultSetToSegnalazioneFilmEntity(ResultSet resultSet) throws java.sql.SQLException {
+    @Override
+    public List<SegnalazioneFilmEntity> getAllReportedMovies() {
+        try{
+            return jdbcTemplate.query(getSqlCommandForAllReportedMovies(),
+                    (resultSet, i) -> resultSetForAdministratorsToSegnalazioneFilmEntity(resultSet));
+        }catch(DataAccessException e){
+            return null;
+        }
+    }
+
+    private String getSqlCommandForAllReportedMovies() {
+        return "SELECT \"FK_FilmSegnalato\", \"FK_UtenteSegnalatore\" , \"MessaggioSegnalazione\" " +
+                "FROM \"SegnalazioneFilm\" " +
+                "WHERE \"SegnalazioneFilm\".\"notifica_visibile_per_utente\" = 'false' " +
+                " AND \"SegnalazioneFilm\".\"EsitoSegnalazione\" = 'Pendente' " +
+                "ORDER BY \"SegnalazioneFilm\".\"FK_FilmSegnalato\";";
+    }
+
+    @Override
+    public List<SegnalazioneFilmEntity> getAllManagedReportedMovies() {
+        try{
+            return jdbcTemplate.query(getSqlCommandForAllManagedReportedMovies(),
+                    (resultSet, i) -> resultSetForAdministratorsToSegnalazioneFilmEntity(resultSet));
+        }catch(DataAccessException e){
+            return null;
+        }
+    }
+
+    private String getSqlCommandForAllManagedReportedMovies() {
+        return "SELECT \"FK_FilmSegnalato\", \"FK_UtenteSegnalatore\" , \"MessaggioSegnalazione\" " +
+                "FROM \"SegnalazioneFilm\" " +
+                "WHERE \"SegnalazioneFilm\".\"EsitoSegnalazione\" <> 'Pendente' " +
+                "ORDER BY \"SegnalazioneFilm\".\"FK_FilmSegnalato\";";
+    }
+
+    private SegnalazioneFilmEntity resultSetForAdministratorsToSegnalazioneFilmEntity(ResultSet resultSet) throws java.sql.SQLException {
+        return new SegnalazioneFilmEntity(resultSet.getLong("FK_FilmSegnalato"),
+                resultSet.getString("FK_UtenteSegnalatore"),
+                resultSet.getString("MessaggioSegnalazione"), null);
+    }
+
+    private SegnalazioneFilmEntity resultSetForUsersToSegnalazioneFilmEntity(ResultSet resultSet) throws java.sql.SQLException {
         return new SegnalazioneFilmEntity(resultSet.getLong("FK_FilmSegnalato"),
                   null, null,
                    TipoSegnalazione.valueOf(resultSet.getString("EsitoSegnalazione")));

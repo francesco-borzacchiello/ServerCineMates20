@@ -57,7 +57,43 @@ public class ServerSpringSegnalazioneController {
         List<SegnalazioneUtenteEntity> list = daoToSegnalazioneUtenteDao().getAllUsersReports(userEmail);
         if (list == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Non è stato possibile recuperare le segnalazioni degli utente.");
+                    "Non è stato possibile recuperare le segnalazioni degli utenti.");
+        return list;
+    }
+
+    @RequestMapping(value="/ServerCineMates20/Report/getAllReportedUsers", method= RequestMethod.GET)
+    public List<SegnalazioneUtenteEntity> getAllReportedUsers() {
+        List<SegnalazioneUtenteEntity> list = daoToSegnalazioneUtenteDao().getAllReportedUsers();
+        if (list == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Non è stato possibile recuperare le segnalazioni degli utenti.");
+        return list;
+    }
+
+    @RequestMapping(value="/ServerCineMates20/Report/getAllManagedReportedUsers", method= RequestMethod.GET)
+    public List<SegnalazioneUtenteEntity> getAllManagedReportedUsers() {
+        List<SegnalazioneUtenteEntity> list = daoToSegnalazioneUtenteDao().getAllManagedReportedUsers();
+        if (list == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Non è stato possibile recuperare le segnalazioni degli utenti.");
+        return list;
+    }
+
+    @RequestMapping(value="/ServerCineMates20/Report/getAllReportedMovies", method= RequestMethod.GET)
+    public List<SegnalazioneFilmEntity> getAllReportedMovies() {
+        List<SegnalazioneFilmEntity> list = daoToSegnalazioneFilmDao().getAllReportedMovies();
+        if (list == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Non è stato possibile recuperare le segnalazioni degli utenti.");
+        return list;
+    }
+
+    @RequestMapping(value="/ServerCineMates20/Report/getAllManagedReportedMovies", method= RequestMethod.GET)
+    public List<SegnalazioneFilmEntity> getAllManagedReportedMovies() {
+        List<SegnalazioneFilmEntity> list = daoToSegnalazioneFilmDao().getAllManagedReportedMovies();
+        if (list == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Non è stato possibile recuperare le segnalazioni degli utenti.");
         return list;
     }
 

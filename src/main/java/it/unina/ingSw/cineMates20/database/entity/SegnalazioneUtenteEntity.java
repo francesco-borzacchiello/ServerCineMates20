@@ -32,8 +32,9 @@ public class SegnalazioneUtenteEntity {
         this.fkUtenteSegnalato = fkUtenteSegnalato;
         this.fkUtenteSegnalatore = fkUtenteSegnalatore;
         this.messaggioSegnalazione = messaggioSegnalazione;
-        this.dataSegnalazione = Timestamp.from(Instant.now());
         this.esitoSegnalazione = esitoSegnalazione;
+
+        this.dataSegnalazione = Timestamp.from(Instant.now());
     }
 
     @Basic
@@ -41,7 +42,6 @@ public class SegnalazioneUtenteEntity {
     public String getFkUtenteSegnalato() {
         return fkUtenteSegnalato;
     }
-
 
     public void setFkUtenteSegnalato(String fkUtenteSegnalato) {
         this.fkUtenteSegnalato = fkUtenteSegnalato;
@@ -126,7 +126,6 @@ public class SegnalazioneUtenteEntity {
     public void setEsitoSegnalazione(TipoSegnalazione esitoSegnalazione) {
         this.esitoSegnalazione = esitoSegnalazione;
     }
-
 
     @Override
     public boolean equals(Object o) {

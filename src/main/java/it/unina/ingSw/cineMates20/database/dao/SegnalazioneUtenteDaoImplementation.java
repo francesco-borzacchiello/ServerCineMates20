@@ -34,16 +34,10 @@ public class SegnalazioneUtenteDaoImplementation implements SegnalazioneUtenteDa
     public List<SegnalazioneUtenteEntity> getAllUsersReports(String userEmail) {
         try{
             return jdbcTemplate.query(getSqlCommandForAllUsersReports(),
-                                      (resultSet, i) -> resultSetToSegnalazioneUtenteEntity(resultSet), userEmail);
+                                      (resultSet, i) -> resultSetForUsersToSegnalazioneUtenteEntity(resultSet), userEmail);
         }catch(DataAccessException e){
             return null;
         }
-    }
-
-    private SegnalazioneUtenteEntity resultSetToSegnalazioneUtenteEntity(ResultSet resultSet) throws java.sql.SQLException {
-        return new SegnalazioneUtenteEntity(resultSet.getString("FK_UtenteSegnalato"),
-                null, null,
-                TipoSegnalazione.valueOf(resultSet.getString("EsitoSegnalazione")));
     }
 
     private String getSqlCommandForAllUsersReports() {
@@ -51,6 +45,53 @@ public class SegnalazioneUtenteDaoImplementation implements SegnalazioneUtenteDa
                 "FROM \"SegnalazioneUtente\" " +
                 "WHERE \"SegnalazioneUtente\".\"notifica_visibile_per_utente\" = 'true' " +
                 " AND \"SegnalazioneUtente\".\"FK_UtenteSegnalatore\" = ?;";
+    }
+
+    @Override
+    public List<SegnalazioneUtenteEntity> getAllReportedUsers() {
+        try{
+            return jdbcTemplate.query(getSqlCommandForAllReportedUsers(),
+                    (resultSet, i) -> resultSetForAdministratorsToSegnalazioneUtenteEntity(resultSet));
+        }catch(DataAccessException e){
+            return null;
+        }
+    }
+
+    private String getSqlCommandForAllReportedUsers() {
+        return "SELECT \"FK_UtenteSegnalato\", \"FK_UtenteSegnalatore\" , \"MessaggioSegnalazione\" " +
+                "FROM \"SegnalazioneUtente\" " +
+                "WHERE \"SegnalazioneUtente\".\"notifica_visibile_per_utente\" = 'false' " +
+                " AND \"SegnalazioneUtente\".\"EsitoSegnalazione\" = 'Pendente' " +
+                "ORDER BY \"SegnalazioneUtente\".\"FK_UtenteSegnalato\";";
+    }
+
+    @Override
+    public List<SegnalazioneUtenteEntity> getAllManagedReportedUsers() {
+        try{
+            return jdbcTemplate.query(getSqlCommandForAllManagedReportedUsers(),
+                    (resultSet, i) -> resultSetForAdministratorsToSegnalazioneUtenteEntity(resultSet));
+        }catch(DataAccessException e){
+            return null;
+        }
+    }
+
+    private String getSqlCommandForAllManagedReportedUsers() {
+        return "SELECT \"FK_UtenteSegnalato\", \"FK_UtenteSegnalatore\" , \"MessaggioSegnalazione\" " +
+                "FROM \"SegnalazioneUtente\" " +
+                "WHERE \"SegnalazioneUtente\".\"EsitoSegnalazione\" <> 'Pendente' " +
+                "ORDER BY \"SegnalazioneUtente\".\"FK_UtenteSegnalato\";";
+    }
+
+    private SegnalazioneUtenteEntity resultSetForAdministratorsToSegnalazioneUtenteEntity(ResultSet resultSet) throws java.sql.SQLException {
+        return new SegnalazioneUtenteEntity(resultSet.getString("FK_UtenteSegnalato"),
+                resultSet.getString("FK_UtenteSegnalatore"),
+                resultSet.getString("MessaggioSegnalazione"), null);
+    }
+
+    private SegnalazioneUtenteEntity resultSetForUsersToSegnalazioneUtenteEntity(ResultSet resultSet) throws java.sql.SQLException {
+        return new SegnalazioneUtenteEntity(resultSet.getString("FK_UtenteSegnalato"),
+                null, null,
+                TipoSegnalazione.valueOf(resultSet.getString("EsitoSegnalazione")));
     }
 
     @Override
