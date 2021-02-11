@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class ServerSpringSegnalazioneController {
@@ -70,9 +71,9 @@ public class ServerSpringSegnalazioneController {
         return list;
     }
 
-    @RequestMapping(value="/ServerCineMates20/Report/getAllManagedReportedUsers", method= RequestMethod.GET)
-    public List<SegnalazioneUtenteEntity> getAllManagedReportedUsers() {
-        List<SegnalazioneUtenteEntity> list = daoToSegnalazioneUtenteDao().getAllManagedReportedUsers();
+    @RequestMapping(value="/ServerCineMates20/Report/getAllManagedReportedUsers", method= RequestMethod.POST)
+    public List<SegnalazioneUtenteEntity> getAllManagedReportedUsers(@RequestBody String emailHash) {
+        List<SegnalazioneUtenteEntity> list = daoToSegnalazioneUtenteDao().getAllManagedReportedUsers(emailHash);
         if (list == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Non è stato possibile recuperare le segnalazioni degli utenti.");
@@ -88,9 +89,9 @@ public class ServerSpringSegnalazioneController {
         return list;
     }
 
-    @RequestMapping(value="/ServerCineMates20/Report/getAllManagedReportedMovies", method= RequestMethod.GET)
-    public List<SegnalazioneFilmEntity> getAllManagedReportedMovies() {
-        List<SegnalazioneFilmEntity> list = daoToSegnalazioneFilmDao().getAllManagedReportedMovies();
+    @RequestMapping(value="/ServerCineMates20/Report/getAllManagedReportedMovies", method= RequestMethod.POST)
+    public List<SegnalazioneFilmEntity> getAllManagedReportedMovies(@RequestBody String emailHash) {
+        List<SegnalazioneFilmEntity> list = daoToSegnalazioneFilmDao().getAllManagedReportedMovies(emailHash);
         if (list == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Non è stato possibile recuperare le segnalazioni degli utenti.");
@@ -105,12 +106,20 @@ public class ServerSpringSegnalazioneController {
                     "Si è verificato un errore durante l'aggiornamento della segnalazione.");
     }
 
-    @RequestMapping(value="/ServerCineMates20/Report/administratorHandledMovieNotification", method=RequestMethod.POST)
-    public void updateAdministratorHandledMovieNotification(@RequestBody SegnalazioneFilmEntity segnalazioneFilmEntity) {
-        boolean update = daoToSegnalazioneFilmDao().updateAdministratorHandledNotification(segnalazioneFilmEntity);
-        if (!update)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Si è verificato un errore durante l'aggiornamento della segnalazione.");
+    @RequestMapping(value="/ServerCineMates20/Report/administratorHandledMovieReport", method=RequestMethod.POST)
+    public boolean updateAdministratorHandledMovieReport(@RequestBody Map<String, SegnalazioneFilmEntity> json) {
+        Map.Entry<String, SegnalazioneFilmEntity> entry = json.entrySet().stream().findFirst().orElse(null);
+        if(entry == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Si è verificato un errore durante l'aggiornamento della segnalazione.");
+
+        String emailHash = entry.getKey();
+        SegnalazioneFilmEntity segnalazioneFilmEntity = entry.getValue();
+
+        if(emailHash == null || segnalazioneFilmEntity == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Si è verificato un errore durante l'aggiornamento della segnalazione.");
+
+        segnalazioneFilmEntity.setFkAmministratoreCheGestisce(emailHash);
+        return daoToSegnalazioneFilmDao().updateAdministratorHandledMovieReport(segnalazioneFilmEntity);
     }
 
     @RequestMapping(value="/ServerCineMates20/Report/userDeleteUserNotification", method=RequestMethod.POST)
@@ -121,12 +130,20 @@ public class ServerSpringSegnalazioneController {
                     "Si è verificato un errore durante l'aggiornamento della segnalazione.");
     }
 
-    @RequestMapping(value="/ServerCineMates20/Report/administratorHandledUserNotification", method=RequestMethod.POST)
-    public void updateAdministratorHandledUserNotification(@RequestBody SegnalazioneUtenteEntity segnalazioneUtenteEntity) {
-        boolean update = daoToSegnalazioneUtenteDao().updateAdministratorHandledNotification(segnalazioneUtenteEntity);
-        if (!update)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Si è verificato un errore durante l'aggiornamento della segnalazione.");
+    @RequestMapping(value="/ServerCineMates20/Report/administratorHandledUserReport", method=RequestMethod.POST)
+    public boolean updateAdministratorHandledUserReport(@RequestBody Map<String, SegnalazioneUtenteEntity> json) {
+        Map.Entry<String, SegnalazioneUtenteEntity> entry = json.entrySet().stream().findFirst().orElse(null);
+        if(entry == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Si è verificato un errore durante l'aggiornamento della segnalazione.");
+
+        String emailHash = entry.getKey();
+        SegnalazioneUtenteEntity segnalazioneUtenteEntity = entry.getValue();
+
+        if(emailHash == null || segnalazioneUtenteEntity == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Si è verificato un errore durante l'aggiornamento della segnalazione.");
+
+        segnalazioneUtenteEntity.setFkAmministratoreCheGestisce(emailHash);
+        return daoToSegnalazioneUtenteDao().updateAdministratorHandledUserReport(segnalazioneUtenteEntity);
     }
 
     private SegnalazioneFilmDao<SegnalazioneFilmEntity,Integer> daoToSegnalazioneFilmDao() {

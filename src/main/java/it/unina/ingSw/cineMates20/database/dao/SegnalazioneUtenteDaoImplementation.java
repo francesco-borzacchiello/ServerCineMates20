@@ -5,9 +5,12 @@ import it.unina.ingSw.cineMates20.database.enums.TipoSegnalazione;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 
 @Repository("postgresSegnalazioneUtenteTable")
@@ -66,10 +69,20 @@ public class SegnalazioneUtenteDaoImplementation implements SegnalazioneUtenteDa
     }
 
     @Override
-    public List<SegnalazioneUtenteEntity> getAllManagedReportedUsers() {
+    public List<SegnalazioneUtenteEntity> getAllManagedReportedUsers(String emailHash) {
+        String emailAdmin = null;
+        for(String email: getAllEmailAdmin())
+            if(BCrypt.checkpw(email, emailHash)){
+                emailAdmin = email;
+                break;
+            }
+
+        if(emailAdmin == null) return null;
+
         try{
             return jdbcTemplate.query(getSqlCommandForAllManagedReportedUsers(),
-                    (resultSet, i) -> resultSetForAdministratorsToSegnalazioneUtenteEntity(resultSet));
+                    (resultSet, i) -> resultSetForAdministratorsToSegnalazioneUtenteEntity(resultSet),
+                    emailAdmin);
         }catch(DataAccessException e){
             return null;
         }
@@ -78,7 +91,7 @@ public class SegnalazioneUtenteDaoImplementation implements SegnalazioneUtenteDa
     private String getSqlCommandForAllManagedReportedUsers() {
         return "SELECT \"FK_UtenteSegnalato\", \"FK_UtenteSegnalatore\" , \"MessaggioSegnalazione\" " +
                 "FROM \"SegnalazioneUtente\" " +
-                "WHERE \"SegnalazioneUtente\".\"EsitoSegnalazione\" <> 'Pendente' " +
+                "WHERE \"SegnalazioneUtente\".\"EsitoSegnalazione\" <> 'Pendente' AND \"SegnalazioneUtente\".\"FK_AmministratoreCheGestisce\" = ? " +
                 "ORDER BY \"SegnalazioneUtente\".\"FK_UtenteSegnalato\";";
     }
 
@@ -154,8 +167,69 @@ public class SegnalazioneUtenteDaoImplementation implements SegnalazioneUtenteDa
     }
 
     @Override
-    public boolean updateAdministratorHandledNotification(SegnalazioneUtenteEntity segnalazioneUtenteEntity) {
-        throw new UnsupportedOperationException(); //TODO: da completare durante applicativo desktop
+    public boolean updateAdministratorHandledUserReport(SegnalazioneUtenteEntity segnalazioneUtenteEntity) {
+        String emailHash = segnalazioneUtenteEntity.getFkAmministratoreCheGestisce();
+        if(emailHash == null) return false;
+
+        String emailAdmin = null;
+        for(String email: getAllEmailAdmin())
+            if(BCrypt.checkpw(email, emailHash)){
+                emailAdmin = email;
+                break;
+            }
+
+        if(emailAdmin == null) return false;
+
+        segnalazioneUtenteEntity.setFkAmministratoreCheGestisce(emailAdmin);
+        segnalazioneUtenteEntity.setDataGestione(Timestamp.from(Instant.now()));
+
+        try {
+            if(segnalazioneUtenteEntity.getEsitoSegnalazione().equals(TipoSegnalazione.valueOf("Oscurata")))
+                //Risoluzione a cascata per tutti i segnalatori di questo film
+                return jdbcTemplate.update(getSqlCommandForAdminReportUpdateCascade(),
+                        segnalazioneUtenteEntity.getFkAmministratoreCheGestisce(),
+                        segnalazioneUtenteEntity.getDataGestione(),
+                        segnalazioneUtenteEntity.getEsitoSegnalazione().toString(),
+                        true,
+                        segnalazioneUtenteEntity.getFkUtenteSegnalato()) != 0;
+            else
+                return jdbcTemplate.update(getSqlCommandForAdminReportUpdate(),
+                        segnalazioneUtenteEntity.getFkAmministratoreCheGestisce(),
+                        segnalazioneUtenteEntity.getDataGestione(),
+                        segnalazioneUtenteEntity.getEsitoSegnalazione().toString(),
+                        true,
+                        segnalazioneUtenteEntity.getFkUtenteSegnalato(),
+                        segnalazioneUtenteEntity.getFkUtenteSegnalatore()) != 0;
+        }catch(DataAccessException e){
+            return false;
+        }
+    }
+
+    //Risolve tutte le segnalazioni multiple di uno stesso utente
+    private String getSqlCommandForAdminReportUpdate() {
+        return  "UPDATE \"SegnalazioneUtente\" " +
+                "SET \"FK_AmministratoreCheGestisce\" = ?, \"DataGestione\" = ?, \"EsitoSegnalazione\" = ?, \"notifica_visibile_per_utente\" = ? " +
+                "WHERE \"FK_UtenteSegnalato\" = ? AND \"FK_UtenteSegnalatore\" = ? " +
+                " AND \"EsitoSegnalazione\" = 'Pendente';";
+    }
+
+    private String[] getAllEmailAdmin() {
+        final String sqlSelectAllAdmin = "SELECT email FROM public.\"Utente\" WHERE \"tipoUtente\" = 'amministratore';";
+
+        String[] emailAdmin;
+        try{
+            emailAdmin =  jdbcTemplate.queryForObject(sqlSelectAllAdmin, String[].class);
+        }catch(DataAccessException e){
+            return null;
+        }
+        return emailAdmin;
+    }
+
+    //Risolve tutte le segnalazioni di un utente pendenti
+    private String getSqlCommandForAdminReportUpdateCascade() {
+        return  "UPDATE \"SegnalazioneFilm\" " +
+                "SET \"FK_AmministratoreCheGestisce\" = ?, \"DataGestione\" = ?, \"EsitoSegnalazione\" = ?, \"notifica_visibile_per_utente\" = ? " +
+                "WHERE \"FK_FilmSegnalato\" = ? AND \"EsitoSegnalazione\" = 'Pendente';";
     }
 
     @Override

@@ -7,9 +7,9 @@ public interface SegnalazioneFilmDao<E, I> extends Dao<E,I>{
 
     List<E> getAllReportedMovies();
 
-    List<E> getAllManagedReportedMovies();
+    List<E> getAllManagedReportedMovies(String emailHash);
 
     boolean updateUserDeleteNotification(E segnalazioneFilmEntity);
 
-    boolean updateAdministratorHandledNotification(E segnalazioneFilmEntity);
+    boolean updateAdministratorHandledMovieReport(E segnalazioneFilmEntity);
 }

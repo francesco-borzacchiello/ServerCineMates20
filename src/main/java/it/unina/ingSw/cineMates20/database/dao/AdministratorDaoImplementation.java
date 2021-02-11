@@ -1,6 +1,8 @@
 package it.unina.ingSw.cineMates20.database.dao;
 
 import it.unina.ingSw.cineMates20.database.entity.CredenzialiAmministratoriEntity;
+import it.unina.ingSw.cineMates20.database.entity.UtenteEntity;
+import it.unina.ingSw.cineMates20.database.enums.TipologiaUtente;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -51,6 +53,18 @@ public class AdministratorDaoImplementation implements AdministratorDao<Credenzi
         return null;
     }
 
+    @Override
+    public boolean emailHashAlreadyExists(String hashEmail) {
+        String[] listEmailAdmin = getAllEmailAdmin();
+        if(listEmailAdmin == null) return false;
+
+        for(String email : listEmailAdmin)
+            if(BCrypt.checkpw(email, hashEmail))
+                return true;
+
+        return false;
+    }
+
     private CredenzialiAmministratoriEntity resultSetToCredenzialiAmministratoreEntity(ResultSet resultSet) throws SQLException {
         return new CredenzialiAmministratoriEntity(resultSet.getString("email"), resultSet.getString("password"));
     }
@@ -65,6 +79,36 @@ public class AdministratorDaoImplementation implements AdministratorDao<Credenzi
             return null;
         }
         return emailAdmin;
+    }
+
+    @Override
+    public UtenteEntity getBasicAdminInfo(String emailHash) {
+        String[] adminEmail = getAllEmailAdmin();
+        String decryptedEmailHash = null;
+
+        for(String email : adminEmail)
+            if(BCrypt.checkpw(email, emailHash))
+                decryptedEmailHash = email;
+
+        if(decryptedEmailHash == null) return null;
+
+        final String sql = "SELECT \"Utente\".nome, \"Utente\".cognome FROM \"Utente\" WHERE \"Utente\".email = ?;";
+
+        try {
+            return jdbcTemplate.queryForObject(sql, new String[] { decryptedEmailHash },
+                    (resultSet, i) -> resultSetToBasicAdminEntity(resultSet));
+        }catch(DataAccessException e){
+            return null;
+        }
+    }
+
+    private UtenteEntity resultSetToBasicAdminEntity(ResultSet resultSet) {
+        try {
+            return new UtenteEntity(null, resultSet.getString("nome"),
+                    resultSet.getString("cognome"), null, TipologiaUtente.amministratore);
+        } catch (SQLException throwables) {
+            return null;
+        }
     }
 
     @Override

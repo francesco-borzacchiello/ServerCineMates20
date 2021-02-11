@@ -3,6 +3,7 @@ package it.unina.ingSw.cineMates20.database.controller;
 import it.unina.ingSw.cineMates20.database.dao.AdministratorDao;
 import it.unina.ingSw.cineMates20.database.dao.Dao;
 import it.unina.ingSw.cineMates20.database.entity.CredenzialiAmministratoriEntity;
+import it.unina.ingSw.cineMates20.database.entity.UtenteEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -22,7 +23,6 @@ public class ServerSpringAmministratoriController {
 
     @RequestMapping(value="/ServerCineMates20/Admin/getHashPassword", method = RequestMethod.POST)
     public String getHashPassword(@RequestBody String emailHash) {
-        System.out.println("EmailHash: " + emailHash);
         if(emailHash == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Argomento non valido, è necessario un hash di un'email valido.");
@@ -30,6 +30,23 @@ public class ServerSpringAmministratoriController {
         if(passwordHash == null)
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         return passwordHash;
+    }
+
+    @RequestMapping(value="/ServerCineMates20/Admin/emailHashAlreadyExists", method = RequestMethod.POST)
+    public boolean emailHashAlreadyExists(@RequestBody String emailHash) {
+        if(emailHash == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Argomento non valido, è necessario un hash di un'email valido.");
+        return daoToAdministratorDao().emailHashAlreadyExists(emailHash);
+    }
+
+    //Restituisce nome e cognome dato l'hash dell'email di un amministratore
+    @RequestMapping(value="/ServerCineMates20/Admin/getBasicAdminInfo", method = RequestMethod.POST)
+    private UtenteEntity getBasicAdminInfo(@RequestBody String emailHash) {
+        if(emailHash == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Argomento non valido, è necessario un hash di un'email valido.");
+        return daoToAdministratorDao().getBasicAdminInfo(emailHash);
     }
 
     private AdministratorDao<CredenzialiAmministratoriEntity,Integer> daoToAdministratorDao() {

@@ -7,9 +7,9 @@ public interface SegnalazioneUtenteDao<E, I> extends Dao<E,I>{
 
     List<E> getAllReportedUsers();
 
-    List<E> getAllManagedReportedUsers();
+    List<E> getAllManagedReportedUsers(String emailHash);
 
     boolean updateUserDeleteNotification(E segnalazioneUtenteEntity);
 
-    boolean updateAdministratorHandledNotification(E segnalazioneUtenteEntity);
+    boolean updateAdministratorHandledUserReport(E segnalazioneUtenteEntity);
 }

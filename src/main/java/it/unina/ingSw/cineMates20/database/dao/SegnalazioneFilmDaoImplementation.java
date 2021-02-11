@@ -5,9 +5,12 @@ import it.unina.ingSw.cineMates20.database.enums.TipoSegnalazione;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 
 @Repository("postgresSegnalazioneFilmTable")
@@ -51,7 +54,7 @@ public class SegnalazioneFilmDaoImplementation implements SegnalazioneFilmDao<Se
     public List<SegnalazioneFilmEntity> getAllReportedMovies() {
         try{
             return jdbcTemplate.query(getSqlCommandForAllReportedMovies(),
-                    (resultSet, i) -> resultSetForAdministratorsToSegnalazioneFilmEntity(resultSet));
+                    (resultSet, i) -> resultSetForAdministratorsToSegnalazionePendenteFilmEntity(resultSet));
         }catch(DataAccessException e){
             return null;
         }
@@ -66,26 +69,44 @@ public class SegnalazioneFilmDaoImplementation implements SegnalazioneFilmDao<Se
     }
 
     @Override
-    public List<SegnalazioneFilmEntity> getAllManagedReportedMovies() {
+    public List<SegnalazioneFilmEntity> getAllManagedReportedMovies(String emailHash) {
+        String emailAdmin = null;
+        for(String email: getAllEmailAdmin())
+            if(BCrypt.checkpw(email, emailHash)){
+                emailAdmin = email;
+                break;
+            }
+
+        if(emailAdmin == null) return null;
+
         try{
             return jdbcTemplate.query(getSqlCommandForAllManagedReportedMovies(),
-                    (resultSet, i) -> resultSetForAdministratorsToSegnalazioneFilmEntity(resultSet));
+                    (resultSet, i) -> resultSetForAdministratorsToSegnalazioneGestitaFilmEntity(resultSet),
+                    emailAdmin);
         }catch(DataAccessException e){
             return null;
         }
     }
 
     private String getSqlCommandForAllManagedReportedMovies() {
-        return "SELECT \"FK_FilmSegnalato\", \"FK_UtenteSegnalatore\" , \"MessaggioSegnalazione\" " +
+        return "SELECT \"FK_FilmSegnalato\", \"FK_UtenteSegnalatore\" , \"MessaggioSegnalazione\", \"EsitoSegnalazione\" " +
                 "FROM \"SegnalazioneFilm\" " +
-                "WHERE \"SegnalazioneFilm\".\"EsitoSegnalazione\" <> 'Pendente' " +
+                "WHERE \"SegnalazioneFilm\".\"EsitoSegnalazione\" <> 'Pendente' AND \"SegnalazioneFilm\".\"FK_AmministratoreCheGestisce\" = ? " +
                 "ORDER BY \"SegnalazioneFilm\".\"FK_FilmSegnalato\";";
     }
 
-    private SegnalazioneFilmEntity resultSetForAdministratorsToSegnalazioneFilmEntity(ResultSet resultSet) throws java.sql.SQLException {
+    private SegnalazioneFilmEntity resultSetForAdministratorsToSegnalazionePendenteFilmEntity(ResultSet resultSet) throws java.sql.SQLException {
         return new SegnalazioneFilmEntity(resultSet.getLong("FK_FilmSegnalato"),
                 resultSet.getString("FK_UtenteSegnalatore"),
-                resultSet.getString("MessaggioSegnalazione"), null);
+                resultSet.getString("MessaggioSegnalazione"),
+                null);
+    }
+
+    private SegnalazioneFilmEntity resultSetForAdministratorsToSegnalazioneGestitaFilmEntity(ResultSet resultSet) throws java.sql.SQLException {
+        return new SegnalazioneFilmEntity(resultSet.getLong("FK_FilmSegnalato"),
+                resultSet.getString("FK_UtenteSegnalatore"),
+                resultSet.getString("MessaggioSegnalazione"),
+                TipoSegnalazione.valueOf(resultSet.getString("EsitoSegnalazione")));
     }
 
     private SegnalazioneFilmEntity resultSetForUsersToSegnalazioneFilmEntity(ResultSet resultSet) throws java.sql.SQLException {
@@ -147,8 +168,69 @@ public class SegnalazioneFilmDaoImplementation implements SegnalazioneFilmDao<Se
     }
 
     @Override
-    public boolean updateAdministratorHandledNotification(SegnalazioneFilmEntity segnalazioneFilmEntity) {
-        throw new UnsupportedOperationException(); //TODO: da completare durante applicativo desktop
+    public boolean updateAdministratorHandledMovieReport(SegnalazioneFilmEntity segnalazioneFilmEntity) {
+        String emailHash = segnalazioneFilmEntity.getFkAmministratoreCheGestisce();
+        if(emailHash == null) return false;
+
+        String emailAdmin = null;
+        for(String email: getAllEmailAdmin())
+            if(BCrypt.checkpw(email, emailHash)){
+                emailAdmin = email;
+                break;
+            }
+
+        if(emailAdmin == null) return false;
+
+        segnalazioneFilmEntity.setFkAmministratoreCheGestisce(emailAdmin);
+        segnalazioneFilmEntity.setDataGestione(Timestamp.from(Instant.now()));
+
+        try {
+            if(segnalazioneFilmEntity.getEsitoSegnalazione().equals(TipoSegnalazione.valueOf("Oscurata")))
+                //Risoluzione a cascata per tutti i segnalatori di questo film
+                return jdbcTemplate.update(getSqlCommandForAdminReportUpdateCascade(),
+                    segnalazioneFilmEntity.getFkAmministratoreCheGestisce(),
+                    segnalazioneFilmEntity.getDataGestione(),
+                    segnalazioneFilmEntity.getEsitoSegnalazione().toString(),
+                    true,
+                    segnalazioneFilmEntity.getFkFilmSegnalato()) != 0;
+            else
+                return jdbcTemplate.update(getSqlCommandForAdminReportUpdate(),
+                    segnalazioneFilmEntity.getFkAmministratoreCheGestisce(),
+                    segnalazioneFilmEntity.getDataGestione(),
+                    segnalazioneFilmEntity.getEsitoSegnalazione().toString(),
+                    true,
+                    segnalazioneFilmEntity.getFkFilmSegnalato(),
+                    segnalazioneFilmEntity.getFkUtenteSegnalatore()) != 0;
+        }catch(DataAccessException e){
+            return false;
+        }
+    }
+
+    //Risolve tutte le segnalazioni multiple di uno stesso utente
+    private String getSqlCommandForAdminReportUpdate() {
+        return  "UPDATE \"SegnalazioneFilm\" " +
+                "SET \"FK_AmministratoreCheGestisce\" = ?, \"DataGestione\" = ?, \"EsitoSegnalazione\" = ?, \"notifica_visibile_per_utente\" = ? " +
+                "WHERE \"FK_FilmSegnalato\" = ? AND \"FK_UtenteSegnalatore\" = ? " +
+                     " AND \"EsitoSegnalazione\" = 'Pendente';";
+    }
+
+    //Risolve tutte le segnalazioni di un film pendenti
+    private String getSqlCommandForAdminReportUpdateCascade() {
+        return  "UPDATE \"SegnalazioneFilm\" " +
+                "SET \"FK_AmministratoreCheGestisce\" = ?, \"DataGestione\" = ?, \"EsitoSegnalazione\" = ?, \"notifica_visibile_per_utente\" = ? " +
+                "WHERE \"FK_FilmSegnalato\" = ? AND \"EsitoSegnalazione\" = 'Pendente';";
+    }
+
+    private String[] getAllEmailAdmin() {
+        final String sqlSelectAllAdmin = "SELECT email FROM public.\"Utente\" WHERE \"tipoUtente\" = 'amministratore';";
+
+        String[] emailAdmin;
+        try{
+            emailAdmin =  jdbcTemplate.queryForObject(sqlSelectAllAdmin, String[].class);
+        }catch(DataAccessException e){
+            return null;
+        }
+        return emailAdmin;
     }
 
     @Override
