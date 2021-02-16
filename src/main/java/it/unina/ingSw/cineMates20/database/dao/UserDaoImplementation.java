@@ -174,6 +174,12 @@ public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
         }
     }
 
+    /**
+       Restituisce l'utente associato all'email data in input.
+       @return
+            null se l'email in input è null <br>
+            UtenteEntity associato all'email presa in input se presente nella base di dati.
+    */
     @Override
     public UtenteEntity getById(String email) {
         if (email == null)

@@ -54,7 +54,7 @@ public class SegnalazioneUtenteDaoImplementation implements SegnalazioneUtenteDa
     public List<SegnalazioneUtenteEntity> getAllReportedUsers() {
         try{
             return jdbcTemplate.query(getSqlCommandForAllReportedUsers(),
-                    (resultSet, i) -> resultSetForAdministratorsToSegnalazioneUtenteEntity(resultSet));
+                    (resultSet, i) -> resultSetForAdministratorsToSegnalazionePendenteUtenteEntity(resultSet));
         }catch(DataAccessException e){
             return null;
         }
@@ -71,7 +71,11 @@ public class SegnalazioneUtenteDaoImplementation implements SegnalazioneUtenteDa
     @Override
     public List<SegnalazioneUtenteEntity> getAllManagedReportedUsers(String emailHash) {
         String emailAdmin = null;
-        for(String email: getAllEmailAdmin())
+
+        List<String> adminMails = getAllEmailAdmin();
+        if(adminMails == null) return null;
+
+        for(String email: adminMails)
             if(BCrypt.checkpw(email, emailHash)){
                 emailAdmin = email;
                 break;
@@ -81,7 +85,7 @@ public class SegnalazioneUtenteDaoImplementation implements SegnalazioneUtenteDa
 
         try{
             return jdbcTemplate.query(getSqlCommandForAllManagedReportedUsers(),
-                    (resultSet, i) -> resultSetForAdministratorsToSegnalazioneUtenteEntity(resultSet),
+                    (resultSet, i) -> resultSetForAdministratorsToSegnalazioneGestitaUtenteEntity(resultSet),
                     emailAdmin);
         }catch(DataAccessException e){
             return null;
@@ -89,16 +93,24 @@ public class SegnalazioneUtenteDaoImplementation implements SegnalazioneUtenteDa
     }
 
     private String getSqlCommandForAllManagedReportedUsers() {
-        return "SELECT \"FK_UtenteSegnalato\", \"FK_UtenteSegnalatore\" , \"MessaggioSegnalazione\" " +
+        return "SELECT \"FK_UtenteSegnalato\", \"FK_UtenteSegnalatore\" , \"MessaggioSegnalazione\", \"EsitoSegnalazione\" " +
                 "FROM \"SegnalazioneUtente\" " +
                 "WHERE \"SegnalazioneUtente\".\"EsitoSegnalazione\" <> 'Pendente' AND \"SegnalazioneUtente\".\"FK_AmministratoreCheGestisce\" = ? " +
                 "ORDER BY \"SegnalazioneUtente\".\"FK_UtenteSegnalato\";";
     }
 
-    private SegnalazioneUtenteEntity resultSetForAdministratorsToSegnalazioneUtenteEntity(ResultSet resultSet) throws java.sql.SQLException {
+    private SegnalazioneUtenteEntity resultSetForAdministratorsToSegnalazionePendenteUtenteEntity(ResultSet resultSet) throws java.sql.SQLException {
         return new SegnalazioneUtenteEntity(resultSet.getString("FK_UtenteSegnalato"),
                 resultSet.getString("FK_UtenteSegnalatore"),
-                resultSet.getString("MessaggioSegnalazione"), null);
+                resultSet.getString("MessaggioSegnalazione"),
+                null);
+    }
+
+    private SegnalazioneUtenteEntity resultSetForAdministratorsToSegnalazioneGestitaUtenteEntity(ResultSet resultSet) throws java.sql.SQLException {
+        return new SegnalazioneUtenteEntity(resultSet.getString("FK_UtenteSegnalato"),
+                resultSet.getString("FK_UtenteSegnalatore"),
+                resultSet.getString("MessaggioSegnalazione"),
+                TipoSegnalazione.valueOf(resultSet.getString("EsitoSegnalazione")));
     }
 
     private SegnalazioneUtenteEntity resultSetForUsersToSegnalazioneUtenteEntity(ResultSet resultSet) throws java.sql.SQLException {
@@ -172,7 +184,11 @@ public class SegnalazioneUtenteDaoImplementation implements SegnalazioneUtenteDa
         if(emailHash == null) return false;
 
         String emailAdmin = null;
-        for(String email: getAllEmailAdmin())
+
+        List<String> adminMails = getAllEmailAdmin();
+        if(adminMails == null) return false;
+
+        for(String email: adminMails)
             if(BCrypt.checkpw(email, emailHash)){
                 emailAdmin = email;
                 break;
@@ -213,12 +229,12 @@ public class SegnalazioneUtenteDaoImplementation implements SegnalazioneUtenteDa
                 " AND \"EsitoSegnalazione\" = 'Pendente';";
     }
 
-    private String[] getAllEmailAdmin() {
+    private List<String> getAllEmailAdmin() {
         final String sqlSelectAllAdmin = "SELECT email FROM public.\"Utente\" WHERE \"tipoUtente\" = 'amministratore';";
 
-        String[] emailAdmin;
+        List<String> emailAdmin;
         try{
-            emailAdmin =  jdbcTemplate.queryForObject(sqlSelectAllAdmin, String[].class);
+            emailAdmin = jdbcTemplate.query(sqlSelectAllAdmin, (rs, rownum) -> rs.getString("email"));
         }catch(DataAccessException e){
             return null;
         }

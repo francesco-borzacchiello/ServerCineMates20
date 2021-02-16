@@ -71,7 +71,10 @@ public class SegnalazioneFilmDaoImplementation implements SegnalazioneFilmDao<Se
     @Override
     public List<SegnalazioneFilmEntity> getAllManagedReportedMovies(String emailHash) {
         String emailAdmin = null;
-        for(String email: getAllEmailAdmin())
+        List<String> adminMails = getAllEmailAdmin();
+        if(adminMails == null) return null;
+
+        for(String email: adminMails)
             if(BCrypt.checkpw(email, emailHash)){
                 emailAdmin = email;
                 break;
@@ -172,8 +175,11 @@ public class SegnalazioneFilmDaoImplementation implements SegnalazioneFilmDao<Se
         String emailHash = segnalazioneFilmEntity.getFkAmministratoreCheGestisce();
         if(emailHash == null) return false;
 
+        List<String> adminMails = getAllEmailAdmin();
+        if(adminMails == null) return false;
+
         String emailAdmin = null;
-        for(String email: getAllEmailAdmin())
+        for(String email: adminMails)
             if(BCrypt.checkpw(email, emailHash)){
                 emailAdmin = email;
                 break;
@@ -221,12 +227,12 @@ public class SegnalazioneFilmDaoImplementation implements SegnalazioneFilmDao<Se
                 "WHERE \"FK_FilmSegnalato\" = ? AND \"EsitoSegnalazione\" = 'Pendente';";
     }
 
-    private String[] getAllEmailAdmin() {
+    private List<String> getAllEmailAdmin() {
         final String sqlSelectAllAdmin = "SELECT email FROM public.\"Utente\" WHERE \"tipoUtente\" = 'amministratore';";
 
-        String[] emailAdmin;
+        List<String> emailAdmin;
         try{
-            emailAdmin =  jdbcTemplate.queryForObject(sqlSelectAllAdmin, String[].class);
+            emailAdmin = jdbcTemplate.query(sqlSelectAllAdmin, (rs, rownum) -> rs.getString("email"));
         }catch(DataAccessException e){
             return null;
         }
@@ -244,5 +250,4 @@ public class SegnalazioneFilmDaoImplementation implements SegnalazioneFilmDao<Se
                 "\"MessaggioSegnalazione\", \"DataSegnalazione\", \"DataGestione\", \"Id\",\"notifica_visibile_per_utente\") " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, nextval('pk_segnalazione_film'), ?);";
     }
-
 }

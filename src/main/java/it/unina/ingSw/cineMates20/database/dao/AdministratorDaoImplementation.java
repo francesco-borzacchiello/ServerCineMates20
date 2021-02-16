@@ -6,6 +6,7 @@ import it.unina.ingSw.cineMates20.database.enums.TipologiaUtente;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Repository;
 
@@ -25,7 +26,7 @@ public class AdministratorDaoImplementation implements AdministratorDao<Credenzi
 
     @Override
     public String getHashPassword(String hashEmail) {
-        String[] listEmailAdmin = getAllEmailAdmin();
+        List<String> listEmailAdmin = getAllEmailAdmin();
         String emailAdmin = null;
         if(listEmailAdmin == null) return null;
 
@@ -55,7 +56,7 @@ public class AdministratorDaoImplementation implements AdministratorDao<Credenzi
 
     @Override
     public boolean emailHashAlreadyExists(String hashEmail) {
-        String[] listEmailAdmin = getAllEmailAdmin();
+        List<String> listEmailAdmin = getAllEmailAdmin();
         if(listEmailAdmin == null) return false;
 
         for(String email : listEmailAdmin)
@@ -69,12 +70,12 @@ public class AdministratorDaoImplementation implements AdministratorDao<Credenzi
         return new CredenzialiAmministratoriEntity(resultSet.getString("email"), resultSet.getString("password"));
     }
 
-    private String[] getAllEmailAdmin() {
+    private List<String> getAllEmailAdmin() {
         final String sqlSelectAllAdmin = "SELECT email FROM public.\"Utente\" WHERE \"tipoUtente\" = 'amministratore';";
 
-        String[] emailAdmin;
+        List<String> emailAdmin;
         try{
-            emailAdmin =  jdbcTemplate.queryForObject(sqlSelectAllAdmin, String[].class);
+            emailAdmin = jdbcTemplate.query(sqlSelectAllAdmin, (rs, rownum) -> rs.getString("email"));
         }catch(DataAccessException e){
             return null;
         }
@@ -83,7 +84,9 @@ public class AdministratorDaoImplementation implements AdministratorDao<Credenzi
 
     @Override
     public UtenteEntity getBasicAdminInfo(String emailHash) {
-        String[] adminEmail = getAllEmailAdmin();
+        List<String> adminEmail = getAllEmailAdmin();
+        if(adminEmail == null) return null;
+
         String decryptedEmailHash = null;
 
         for(String email : adminEmail)

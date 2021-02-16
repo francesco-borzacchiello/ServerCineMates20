@@ -40,22 +40,9 @@ public class ListaFilmDaoImplementation implements ListaFilmDao<ListaFilmEntity,
             return jdbcTemplate.queryForObject(sql, new String[] { idPossessore, nomeLista },
                                               (resultSet, i) -> resultSetToListaFilmEntity(resultSet));
         }catch(DataAccessException e){
-            System.out.println(e.getMessage());
             return null;
         }
     }
-
-    /*private long getIdListaFilm(String sql, String idPossessore) {
-        try {
-            List<Long> l = jdbcTemplate.query(sql, new String[] { idPossessore },
-                    (rs, rowNum) -> rs.getLong("id"));
-
-            if(l.size() == 1)
-                return l.get(0);
-        }catch(DataAccessException ignore){}
-
-        return -1;
-    }*/
 
     private ListaFilmEntity resultSetToListaFilmEntity(ResultSet resultSet) throws  java.sql.SQLException{
         return new ListaFilmEntity(resultSet.getLong("id"),
@@ -71,7 +58,6 @@ public class ListaFilmDaoImplementation implements ListaFilmDao<ListaFilmEntity,
             return jdbcTemplate.update(getSqlCommandForAddFilm(),
                     listaFilm.getId(), idFilm) != 0;
         }catch(DataAccessException e){
-            System.out.println(e.getMessage());
             return false;
         }
     }
