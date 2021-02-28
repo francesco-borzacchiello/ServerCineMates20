@@ -1,6 +1,7 @@
 package it.unina.ingSw.cineMates20.database.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import it.unina.ingSw.cineMates20.database.enums.TipologiaUtente;
 
 import javax.persistence.*;

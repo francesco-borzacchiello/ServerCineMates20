@@ -2,6 +2,7 @@ package it.unina.ingSw.cineMates20.database.dao;
 
 import it.unina.ingSw.cineMates20.database.entity.SegnalazioneFilmEntity;
 import it.unina.ingSw.cineMates20.database.enums.TipoSegnalazione;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;

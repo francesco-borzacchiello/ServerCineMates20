@@ -50,8 +50,8 @@ class UserDaoImplementationTest {
     }
 
     /**
-       Testing Black-Box:
-        getById(String)
+     Testing Black-Box:
+     getById(String)
      */
     @Test
     void getByIdNullEmail() {
@@ -68,8 +68,18 @@ class UserDaoImplementationTest {
         Assertions.assertNull(dao.getById("testErrore@test.com"));
     }
 
+    @Test
+    void getByIdWithEmptyString() {
+        Assertions.assertNull(dao.getById(""));
+    }
+
+    @Test
+    void getByIdWithBlankSpace() {
+        Assertions.assertNull(dao.getById("    "));
+    }
+
     /**
-       Testing White-Box:
+     Testing White-Box:
      */
     @Test
     void getById_1b_2b() {
@@ -82,7 +92,7 @@ class UserDaoImplementationTest {
     }
 
     @Test
-    void getById_1b_4b_9b() {
+    void getById_1b_4b_7b_9b() {
         Assertions.assertNull(dao.getById("testErrore.com"));
     }
 
@@ -113,27 +123,37 @@ class UserDaoImplementationTest {
 
     @Test
     void isFriendRequestPendingUserIsNotNullAndFriendIsNotNull() {
-        Assertions.assertTrue(userDao.isFriendRequestPending("test@test.com", "test1@test.com"));
+        Assertions.assertTrue(userDao.isFriendRequestPending
+                                ("test@test.com", "test1@test.com"));
     }
 
     @Test
     void isFriendRequestPendingFriendIsNotNullAndUserIsNotNull() {
-        Assertions.assertTrue(userDao.isFriendRequestPending("test1@test.com", "test@test.com"));
+        Assertions.assertTrue(userDao.isFriendRequestPending
+                                ("test1@test.com", "test@test.com"));
     }
 
     @Test
-    void isFriendRequestPendingUserInvalidFriend() {
-        Assertions.assertFalse(userDao.isFriendRequestPending("test@test.com", "testFail@test.com"));
+    void isFriendRequestPendingInvalidFriend() {
+        Assertions.assertFalse(userDao.isFriendRequestPending
+                                ("test@test.com", "testFail@test.com"));
     }
 
     @Test
-    void isFriendRequestPendingUserInvalidUserWithFriendEmail() {
-        Assertions.assertFalse(userDao.isFriendRequestPending("testFail@test.com", "test1@test.com"));
+    void isFriendRequestPendingInvalidUserWithFriendEmail() {
+        Assertions.assertFalse(userDao.isFriendRequestPending
+                                ("testFail@test.com", "test1@test.com"));
     }
 
     @Test
-    void isFriendRequestPendingUserInvalidUserWithUserEmail() {
-        Assertions.assertFalse(userDao.isFriendRequestPending("testFail@test.com", "test@test.com"));
+    void isFriendRequestPendingInvalidUserWithUserEmail() {
+        Assertions.assertFalse(userDao.isFriendRequestPending
+                                ("testFail@test.com", "test@test.com"));
+    }
+
+    @Test
+    void isFriendRequestPendingUserIsBlankAndFriendIsBlank() {
+        Assertions.assertFalse(userDao.isFriendRequestPending("", ""));
     }
 
     /**

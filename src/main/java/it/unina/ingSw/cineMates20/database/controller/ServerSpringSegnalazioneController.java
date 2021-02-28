@@ -5,6 +5,7 @@ import it.unina.ingSw.cineMates20.database.dao.SegnalazioneFilmDao;
 import it.unina.ingSw.cineMates20.database.dao.SegnalazioneUtenteDao;
 import it.unina.ingSw.cineMates20.database.entity.SegnalazioneFilmEntity;
 import it.unina.ingSw.cineMates20.database.entity.SegnalazioneUtenteEntity;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -71,7 +72,7 @@ public class ServerSpringSegnalazioneController {
         return list;
     }
 
-    @RequestMapping(value="/ServerCineMates20/Report/getAllManagedReportedUsers", method= RequestMethod.POST)
+    @RequestMapping(value="/ServerCineMates20/Report/getAllManagedReportedUsers", method=RequestMethod.POST)
     public List<SegnalazioneUtenteEntity> getAllManagedReportedUsers(@RequestBody String emailHash) {
         List<SegnalazioneUtenteEntity> list = daoToSegnalazioneUtenteDao().getAllManagedReportedUsers(emailHash);
         if (list == null)
@@ -80,7 +81,7 @@ public class ServerSpringSegnalazioneController {
         return list;
     }
 
-    @RequestMapping(value="/ServerCineMates20/Report/getAllReportedMovies", method= RequestMethod.GET)
+    @RequestMapping(value="/ServerCineMates20/Report/getAllReportedMovies", method=RequestMethod.GET)
     public List<SegnalazioneFilmEntity> getAllReportedMovies() {
         List<SegnalazioneFilmEntity> list = daoToSegnalazioneFilmDao().getAllReportedMovies();
         if (list == null)
@@ -89,7 +90,7 @@ public class ServerSpringSegnalazioneController {
         return list;
     }
 
-    @RequestMapping(value="/ServerCineMates20/Report/getAllManagedReportedMovies", method= RequestMethod.POST)
+    @RequestMapping(value="/ServerCineMates20/Report/getAllManagedReportedMovies", method=RequestMethod.POST)
     public List<SegnalazioneFilmEntity> getAllManagedReportedMovies(@RequestBody String emailHash) {
         List<SegnalazioneFilmEntity> list = daoToSegnalazioneFilmDao().getAllManagedReportedMovies(emailHash);
         if (list == null)

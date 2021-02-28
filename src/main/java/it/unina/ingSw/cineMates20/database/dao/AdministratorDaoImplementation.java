@@ -3,10 +3,10 @@ package it.unina.ingSw.cineMates20.database.dao;
 import it.unina.ingSw.cineMates20.database.entity.CredenzialiAmministratoriEntity;
 import it.unina.ingSw.cineMates20.database.entity.UtenteEntity;
 import it.unina.ingSw.cineMates20.database.enums.TipologiaUtente;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Repository;
 

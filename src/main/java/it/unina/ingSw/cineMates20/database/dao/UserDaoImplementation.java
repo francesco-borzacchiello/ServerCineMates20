@@ -2,6 +2,7 @@ package it.unina.ingSw.cineMates20.database.dao;
 
 import it.unina.ingSw.cineMates20.database.entity.UtenteEntity;
 import it.unina.ingSw.cineMates20.database.enums.TipologiaUtente;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -69,13 +70,13 @@ public class UserDaoImplementation implements UserDao<UtenteEntity, String> {
 
     @Override
     public boolean isFriendRequestPending(String userEmail, String friendEmail) throws IllegalArgumentException {
-        if (userEmail == null || friendEmail == null) throw new IllegalArgumentException("Passare un'email non nulla");
-
+        if (userEmail == null || friendEmail == null)
+            throw new IllegalArgumentException("Passare un'email non nulla");
         try {
-            Boolean result = jdbcTemplate.queryForObject(getSqlCommandForIsFriendRequestPending(),
-                                                         new String[]{ userEmail, friendEmail, friendEmail, userEmail }, Boolean.class);
-            if(result != null)
-                return !result; //Se confermata = false, allora la richiesta è pendente
+            Boolean confermata = jdbcTemplate.queryForObject(getSqlCommandForIsFriendRequestPending(),
+                                                             new String[]{ userEmail, friendEmail, friendEmail, userEmail }, Boolean.class);
+            if(confermata != null)
+                return !confermata; //Se confermata == false, allora la richiesta è pendente
             else
                 return false;
         }

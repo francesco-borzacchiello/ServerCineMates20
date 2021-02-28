@@ -4,6 +4,7 @@ import it.unina.ingSw.cineMates20.database.dao.Dao;
 import it.unina.ingSw.cineMates20.database.dao.UserDao;
 import it.unina.ingSw.cineMates20.database.entity.UtenteEntity;
 import it.unina.ingSw.cineMates20.database.enums.TipologiaUtente;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -53,8 +54,8 @@ public class ServerSpringUserController {
     }
 
     @RequestMapping(value="/ServerCineMates20/User/delete/{email}", method=RequestMethod.POST)
-    public void deleteUser(@PathVariable("email") String username) {
-        boolean result = dao.delete(dao.getById(username));
+    public void deleteUser(@PathVariable("email") String email) {
+        boolean result = dao.delete(dao.getById(email));
         if (!result)
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "L'utente da eliminare non esiste.");
     }
